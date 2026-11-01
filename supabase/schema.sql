@@ -33,7 +33,7 @@ create table if not exists public.bookings (
   email                text not null check (email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
   phone                text not null check (char_length(phone) between 7 and 20),
   status               text not null default 'scheduled'
-                       check (status in ('scheduled','completed','no_show','cancelled')),
+                       check (status in ('scheduled','completed','passed','no_show','cancelled')),
   notes                text not null default '',
   confirmation_sent_at timestamptz,
   reminder_sent_at     timestamptz,

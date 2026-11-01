@@ -126,7 +126,7 @@ a{color:var(--brand)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab{border:0;background:transparent;border-radius:999px;padding:9px 18px;font-weight:600;color:var(--muted);min-height:42px}
 .tab.on{background:var(--brand);color:var(--brand-ink)}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
 .stat b{display:block;font-family:var(--font-display);font-size:34px;font-weight:500;color:var(--brand);font-variant-numeric:tabular-nums;line-height:1.1}
 .stat span{font-size:14px;color:var(--muted)}
@@ -140,6 +140,7 @@ td.ltr{direction:ltr;text-align:right;unicode-bidi:plaintext}
 .pill{display:inline-block;border-radius:999px;padding:3px 12px;font-size:13px;font-weight:700}
 .pill.scheduled{background:var(--brand-soft);color:var(--brand)}
 .pill.completed{background:var(--ok-bg);color:var(--ok)}
+.pill.passed{background:var(--ok);color:var(--surface)}
 .pill.no_show{background:var(--warn-bg);color:var(--warn)}
 .pill.cancelled{background:var(--bad-bg);color:var(--bad)}
 .acts{display:flex;gap:6px;flex-wrap:wrap}
@@ -156,6 +157,7 @@ td.ltr{direction:ltr;text-align:right;unicode-bidi:plaintext}
 .ev{border-radius:8px;padding:4px 8px;font-size:13px;line-height:1.35;background:var(--brand-soft);color:var(--brand);overflow-wrap:anywhere}
 .ev b{font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
 .ev.completed{background:var(--ok-bg);color:var(--ok)}
+.ev.passed{background:var(--ok);color:var(--surface)}
 .ev.no_show{background:var(--warn-bg);color:var(--warn)}
 .day-list{display:flex;flex-direction:column;gap:6px}
 .dl{display:grid;grid-template-columns:70px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 12px}
@@ -210,7 +212,7 @@ const CFG=window.HERIZON_CONFIG||{};
 const LIVE=!!(CFG.supabaseUrl&&CFG.supabaseAnonKey&&window.supabase);
 const TZ='Asia/Jerusalem', SLOT_MS=600000, LEAD_MS=3600000;
 const PUBLIC_URL='https://herizon-program.netlify.app/'; // הכתובת שמופיעה בלינקים שנשלחים למועמדות
-const STATUS={scheduled:'נקבע',completed:'התקיים',no_show:'לא הגיעה',cancelled:'בוטל'};
+const STATUS={scheduled:'נקבע',completed:'התקיים',passed:'עברה את הראיון',no_show:'לא הגיעה',cancelled:'בוטל'};
 
 /* ---------- time helpers (all display in Israel time) ---------- */
 const pad=n=>String(n).padStart(2,'0');
@@ -680,7 +682,7 @@ function Admin(){
   if(auth==='out')return html`<${Login} onIn=${()=>setAuth('in')}/>`;
   const now=Date.now(),active=bookings.filter(b=>b.status!=='cancelled'),taken=new Set(active.map(b=>b.starts_at));
   const openSlots=slots.filter(s=>!s.blocked&&Date.parse(s.starts_at)>now+LEAD_MS&&!taken.has(s.starts_at)).map(s=>s.starts_at).sort();
-  const stats=[[active.length,'ראיונות שנקבעו'],[bookings.filter(b=>b.status==='completed').length,'ראיונות שהתקיימו'],
+  const stats=[[active.length,'ראיונות שנקבעו'],[bookings.filter(b=>b.status==='completed'||b.status==='passed').length,'ראיונות שהתקיימו'],[bookings.filter(b=>b.status==='passed').length,'עברו את הראיון'],
     [active.filter(b=>b.status==='scheduled'&&Date.parse(b.starts_at)>now).length,'ראיונות שנותרו'],[openSlots.length,'משבצות פנויות']];
   return html`<div className="wrap">
     <${DemoRibbon}/>
