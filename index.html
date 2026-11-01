@@ -527,16 +527,25 @@ function exportXlsx(rows){
     XLSX.utils.book_append_sheet(wb,ws,'ראיונות');XLSX.writeFile(wb,'herizon-interviews.xlsx');return true;}}catch(e){}
   return false;}
 
-function BookingsTab({bookings,openSlots,reload,toast}){
+function BookingsTab({bookings,openSlots,reload,toast,meet}){
   const [q,setQ]=useState(''),[st,setSt]=useState('all'),[notesId,setNotesId]=useState(null),[moveId,setMoveId]=useState(null);
   const rows=bookings.filter(b=>(st==='all'||b.status===st)&&(!q||(b.full_name+b.email+b.phone).toLowerCase().includes(q.toLowerCase())));
   async function patch(id,p,okMsg){const r=await api.updateBooking(id,p);if(!r.ok)toast(r.error||'השמירה נכשלה');else{if(okMsg)toast(okMsg);}await reload();}
-  async function remind(b){const r=await api.sendReminder(b.id);
-    if(r.ok){toast('התזכורת נשלחה ל-'+b.full_name);await reload();}
-    else toast(r.reason==='demo'?'הדגמה: שליחת מיילים עדיין לא מחוברת':r.reason==='email_not_configured'?'שירות המיילים עדיין לא הוגדר':'התזכורת לא נשלחה');}
-  async function invite(b){const r=await api.sendInvite(b.id);
-    if(r.ok){toast('זימון ליומן נשלח ל-'+b.full_name);await reload();}
-    else toast(r.reason==='demo'?'הדגמה: שליחת מיילים עדיין לא מחוברת':r.reason==='email_not_configured'?'שירות המיילים עדיין לא הוגדר':'הזימון לא נשלח');}
+  /* מייל מוכן ב-Gmail + זימון ביומן Google עם המועמדת כמוזמנת. המנהלת שולחת בעצמה מהחשבון שלה. */
+  const enc=encodeURIComponent;
+  function mailText(b){
+    const first=(b.full_name||'').trim().split(/\s+/)[0];
+    const manage=location.href.split('#')[0]+'#manage-'+b.token;
+    const lines=['היי '+first+',','','תודה שנרשמת לתוכנית HERizon! קבענו שיחת היכרות קצרה (כ-10 דקות):','',
+      'תאריך: '+fmtDate(b.starts_at),'שעה: '+fmtTime(b.starts_at)+' (שעון ישראל)'];
+    if(meet)lines.push('קישור לשיחה: '+meet);
+    lines.push('','לשינוי או ביטול השיחה: '+manage,'','מחכות להכיר אותך,','צוות HERizon');
+    return {subject:'HERizon | שיחת ההיכרות שלנו, '+fmtDate(b.starts_at)+' בשעה '+fmtTime(b.starts_at),body:lines.join('\n')};}
+  const mailHref=b=>{const m=mailText(b);return 'https://mail.google.com/mail/?view=cm&fs=1&to='+enc(b.email)+'&su='+enc(m.subject)+'&body='+enc(m.body);};
+  const inviteHref=b=>{const st=ms=>new Date(ms).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),t=Date.parse(b.starts_at);
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+enc('HERizon | שיחת היכרות עם '+b.full_name)+'&dates='+st(t)+'/'+st(t+SLOT_MS)+'&ctz=Asia/Jerusalem&add='+enc(b.email)
+      +'&details='+enc('שיחת היכרות קצרה (10 דקות) לקראת תוכנית HERizon.'+(meet?'\nקישור לשיחה: '+meet:''))+(meet?'&location='+enc(meet):'');};
+  async function markSent(b){try{await api.updateBooking(b.id,{confirmation_sent_at:new Date().toISOString()});await reload();}catch(e){}}
   async function move(b,iso){const r=await api.moveBooking(b.id,iso);if(r.ok){toast('המועד עודכן');setMoveId(null);await reload();}else toast('השעה כבר תפוסה או לא זמינה');}
   const byDay=useMemo(()=>{const m=new Map();openSlots.forEach(i=>{const k=dayKey(i);if(!m.has(k))m.set(k,[]);m.get(k).push(i);});return [...m.entries()];},[openSlots]);
   return html`<section className="card">
@@ -545,6 +554,7 @@ function BookingsTab({bookings,openSlots,reload,toast}){
       <div className="field"><label htmlFor="stf">סטטוס</label><select id="stf" value=${st} onChange=${e=>setSt(e.target.value)}><option value="all">הכול</option>${Object.entries(STATUS).map(([k,v])=>html`<option key=${k} value=${k}>${v}</option>`)}</select></div>
       <button className="btn ghost" onClick=${()=>{if(!exportXlsx(rows))toast('הורדת הקובץ זמינה באתר המותקן (לא בתצוגה המקדימה)');}}>ייצוא לאקסל</button>
     </div>
+    ${!meet&&html`<div className="notice warn" style=${{marginBottom:14}}>עוד לא הוגדר קישור Google Meet (לשונית "הגדרות"). המייל יוצא בלי קישור לשיחה.</div>`}
     ${!rows.length?html`<div className="empty">אין ראיונות להצגה.</div>`:html`<div className="tbl-scroll"><table className="resp">
       <thead><tr><th>שם</th><th>מייל</th><th>טלפון</th><th>תאריך</th><th>שעה</th><th>סטטוס</th><th></th></tr></thead>
       <tbody>${rows.map(b=>html`<${React.Fragment} key=${b.id}>
@@ -557,8 +567,8 @@ function BookingsTab({bookings,openSlots,reload,toast}){
           <td data-label="סטטוס"><select className="status-sel" aria-label=${'סטטוס של '+b.full_name} value=${b.status} onChange=${e=>patch(b.id,{status:e.target.value})}>${Object.entries(STATUS).map(([k,v])=>html`<option key=${k} value=${k}>${v}</option>`)}</select></td>
           <td data-label="פעולות"><div className="acts">
             <button className="btn ghost sm" onClick=${()=>setNotesId(notesId===b.id?null:b.id)}>הערות${b.notes?' •':''}</button>
-            ${b.status==='scheduled'&&html`<button className="btn ghost sm" onClick=${()=>invite(b)}>שליחת זימון</button>
-              <button className="btn ghost sm" onClick=${()=>remind(b)}>${b.reminder_sent_at?'תזכורת (נשלחה)':'שליחת תזכורת'}</button>
+            ${b.status==='scheduled'&&html`<a className="btn ghost sm" href=${mailHref(b)} target="_blank" rel="noopener" onClick=${()=>markSent(b)}>${b.confirmation_sent_at?'שליחת מייל (נפתח ✓)':'שליחת מייל'}</a>
+              <a className="btn ghost sm" href=${inviteHref(b)} target="_blank" rel="noopener">זימון ביומן</a>
               <button className="btn ghost sm" onClick=${()=>setMoveId(moveId===b.id?null:b.id)}>שינוי מועד</button>
               <${ConfirmButton} label="ביטול" confirmLabel="לאשר ביטול?" onConfirm=${()=>patch(b.id,{status:'cancelled'},'הראיון בוטל והשעה התפנתה')}/>`}
           </div></td></tr>
@@ -638,10 +648,10 @@ function AvailabilityTab({slots,bookings,reload,toast}){
           :html`<button key=${s.id} className=${'chip'+(s.blocked?' blocked':'')} onClick=${()=>toggle(s)} aria-pressed=${s.blocked} aria-label=${fmtTime(s.starts_at)+(s.blocked?' חסומה':' פנויה')}>${fmtTime(s.starts_at)}</button>`)}</div></div>`)}
       ${grouped.length>more&&html`<div style=${{marginTop:14}}><button className="btn ghost sm" onClick=${()=>setMore(more+14)}>הצגת ימים נוספים</button></div>`}</section></div>`;}
 
-function SettingsTab({toast}){
+function SettingsTab({toast,onSaved}){
   const [s,setS]=useState({meet_link:'',admin_notify_email:''}),[ok,setOk]=useState(false);
   useEffect(()=>{api.getSettings().then(v=>{setS(p=>({...p,...v}));setOk(true);}).catch(()=>{});},[]);
-  async function save(e){e.preventDefault();const r=await api.saveSettings({meet_link:s.meet_link.trim(),admin_notify_email:s.admin_notify_email.trim()});toast(r.ok?'ההגדרות נשמרו':'השמירה נכשלה');}
+  async function save(e){e.preventDefault();const r=await api.saveSettings({meet_link:s.meet_link.trim(),admin_notify_email:s.admin_notify_email.trim()});toast(r.ok?'ההגדרות נשמרו':'השמירה נכשלה');if(r.ok&&onSaved)onSaved();}
   return html`<section className="card"><h3 className="section-title">הגדרות</h3>
     <form className="form" onSubmit=${save}>
       <div className="field"><label htmlFor="s-meet">קישור קבוע ל-Google Meet</label><input id="s-meet" className="ltr" placeholder="https://meet.google.com/xxx-xxxx-xxx" value=${s.meet_link||''} onChange=${e=>setS({...s,meet_link:e.target.value})}/>
@@ -653,9 +663,9 @@ function SettingsTab({toast}){
     ${api.mode==='demo'&&html`<p style=${{marginTop:10}}><${ConfirmButton} label="איפוס נתוני ההדגמה" confirmLabel="לאפס הכול?" onConfirm=${()=>demoApi.resetDemo()}/></p>`}</section>`;}
 
 function Admin(){
-  const [auth,setAuth]=useState('loading'),[tab,setTab]=useState('bookings'),[slots,setSlots]=useState([]),[bookings,setBookings]=useState([]),[err,setErr]=useState(''),[msg,setMsg]=useState('');
+  const [auth,setAuth]=useState('loading'),[tab,setTab]=useState('bookings'),[slots,setSlots]=useState([]),[bookings,setBookings]=useState([]),[meet,setMeet]=useState(''),[err,setErr]=useState(''),[msg,setMsg]=useState('');
   const toast=useCallback(m=>{setMsg(m);clearTimeout(toast.t);toast.t=setTimeout(()=>setMsg(''),3800);},[]);
-  const reload=useCallback(async()=>{try{const [s,b]=await Promise.all([api.listSlots(),api.listBookings()]);setSlots(s);setBookings(b);setErr('');}catch(e){setErr('לא הצלחנו לטעון את הנתונים: '+(e.message||''));}},[]);
+  const reload=useCallback(async()=>{try{const [s,b]=await Promise.all([api.listSlots(),api.listBookings()]);setSlots(s);setBookings(b);setErr('');try{const st=await api.getSettings();setMeet((st.meet_link||'').trim());}catch(e){}}catch(e){setErr('לא הצלחנו לטעון את הנתונים: '+(e.message||''));}},[]);
   useEffect(()=>{api.session().then(ok=>setAuth(ok?'in':'out')).catch(()=>setAuth('out'));},[]);
   useEffect(()=>{if(auth==='in')reload();},[auth,reload]);
   if(auth==='loading')return html`<div className="wrap"><div className="card empty">טוענות…</div></div>`;
@@ -671,10 +681,10 @@ function Admin(){
     <div className="stats">${stats.map(([n,l])=>html`<div key=${l} className="stat"><b>${n}</b><span>${l}</span></div>`)}</div>
     <nav className="tabs" aria-label="ניהול">${[['bookings','ראיונות'],['calendar','יומן'],['avail','זמינות'],['settings','הגדרות']].map(([k,l])=>html`<button key=${k} className=${'tab'+(tab===k?' on':'')} aria-current=${tab===k} onClick=${()=>setTab(k)}>${l}</button>`)}</nav>
     ${err&&html`<div className="notice bad" role="alert">${err} <button className="link" onClick=${reload}>נסי שוב</button></div>`}
-    ${tab==='bookings'&&html`<${BookingsTab} bookings=${bookings} openSlots=${openSlots} reload=${reload} toast=${toast}/>`}
+    ${tab==='bookings'&&html`<${BookingsTab} bookings=${bookings} openSlots=${openSlots} reload=${reload} toast=${toast} meet=${meet}/>`}
     ${tab==='calendar'&&html`<${CalendarTab} slots=${slots} bookings=${bookings}/>`}
     ${tab==='avail'&&html`<${AvailabilityTab} slots=${slots} bookings=${bookings} reload=${reload} toast=${toast}/>`}
-    ${tab==='settings'&&html`<${SettingsTab} toast=${toast}/>`}
+    ${tab==='settings'&&html`<${SettingsTab} toast=${toast} onSaved=${reload}/>`}
     ${msg&&html`<div className="toast" role="status">${msg}</div>`}</div>`;}
 
 /* ======================= ROUTER ======================= */
