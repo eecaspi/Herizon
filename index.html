@@ -209,6 +209,7 @@ const html=htm.bind(React.createElement);
 const CFG=window.HERIZON_CONFIG||{};
 const LIVE=!!(CFG.supabaseUrl&&CFG.supabaseAnonKey&&window.supabase);
 const TZ='Asia/Jerusalem', SLOT_MS=600000, LEAD_MS=3600000;
+const PUBLIC_URL='https://herizon-program.netlify.app/'; // הכתובת שמופיעה בלינקים שנשלחים למועמדות
 const STATUS={scheduled:'נקבע',completed:'התקיים',no_show:'לא הגיעה',cancelled:'בוטל'};
 
 /* ---------- time helpers (all display in Israel time) ---------- */
@@ -542,7 +543,7 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
       '📅 תאריך: '+fmtDate(b.starts_at),
       '🕒 שעה: '+fmtTime(b.starts_at)];
     if(meet)lines.push('💻 Google Meet: '+meet);
-    lines.push('','השיחה תימשך כ-10 דקות.','','נתראה בקרוב!','אסתי וארבל','HERizon | DDos Women');
+    lines.push('','השיחה תימשך כ-10 דקות.','לשינוי או ביטול השיחה: '+PUBLIC_URL+'#manage-'+b.token,'','נתראה בקרוב!','אסתי וארבל','HERizon | DDos Women');
     return {subject:'HERizon | שיחת ההיכרות שלנו, '+fmtDate(b.starts_at)+' בשעה '+fmtTime(b.starts_at),body:lines.join('\n')};}
   const mailHref=b=>{const m=mailText(b);return 'https://mail.google.com/mail/?view=cm&fs=1&to='+enc(b.email)+'&su='+enc(m.subject)+'&body='+enc(m.body);};
   const inviteHref=b=>{const st=ms=>new Date(ms).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),t=Date.parse(b.starts_at);
