@@ -296,6 +296,7 @@ const demoApi=(()=>{
     async updateBooking(id,patch){const b=db.bookings.find(x=>x.id===id);
       if(patch.status==='scheduled'&&b.status==='cancelled'&&taken(b.starts_at))return {ok:false,error:'המשבצת כבר תפוסה'};
       Object.assign(b,patch);wr();return {ok:true};},
+    async deleteBooking(id){db.bookings=db.bookings.filter(x=>x.id!==id);wr();return {ok:true};},
     async moveBooking(id,iso){const b=db.bookings.find(x=>x.id===id);if(!usable(iso)||act().some(x=>x.starts_at===iso&&x.id!==id))return {ok:false,error:'unavailable'};
       b.starts_at=iso;b.slot_id=db.slots.find(x=>x.starts_at===iso).id;wr();return {ok:true};},
     async sendReminder(){return {ok:false,reason:'demo'};},
@@ -336,6 +337,7 @@ const makeLiveApi=()=>{
     async deleteSlots(isos){return rpc('admin_delete_slots',{p_starts:isos});},
     async updateBooking(id,patch){const {error}=await sb.from('bookings').update(patch).eq('id',id);
       if(error)return {ok:false,error:error.code==='23505'?'המשבצת כבר תפוסה':error.message};return {ok:true};},
+    async deleteBooking(id){const {error}=await sb.from('bookings').delete().eq('id',id);return error?{ok:false,error:error.message}:{ok:true};},
     async moveBooking(id,iso){return rpc('admin_move_booking',{p_id:id,p_new:iso});},
     async sendReminder(id){return adminMail('reminder',id);},
     async sendInvite(id){return adminMail('invite',id);},
@@ -549,6 +551,7 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
   const inviteHref=b=>{const st=ms=>new Date(ms).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),t=Date.parse(b.starts_at);
     return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+enc('HERizon | שיחת היכרות עם '+b.full_name)+'&dates='+st(t)+'/'+st(t+SLOT_MS)+'&ctz=Asia/Jerusalem&add='+enc(b.email)
       +'&details='+enc('שיחת היכרות קצרה (10 דקות) לקראת תוכנית HERizon.'+(meet?'\nקישור לשיחה: '+meet:''))+(meet?'&location='+enc(meet):'');};
+  async function del(b){const r=await api.deleteBooking(b.id);if(r.ok){toast('הרשומה של '+b.full_name+' נמחקה');setNotesId(null);setMoveId(null);}else toast('המחיקה נכשלה');await reload();}
   async function markSent(b){try{await api.updateBooking(b.id,{confirmation_sent_at:new Date().toISOString()});await reload();}catch(e){}}
   async function move(b,iso){const r=await api.moveBooking(b.id,iso);if(r.ok){toast('המועד עודכן');setMoveId(null);await reload();}else toast('השעה כבר תפוסה או לא זמינה');}
   const byDay=useMemo(()=>{const m=new Map();openSlots.forEach(i=>{const k=dayKey(i);if(!m.has(k))m.set(k,[]);m.get(k).push(i);});return [...m.entries()];},[openSlots]);
@@ -575,6 +578,7 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
               <a className="btn ghost sm" href=${inviteHref(b)} target="_blank" rel="noopener">זימון ביומן</a>
               <button className="btn ghost sm" onClick=${()=>setMoveId(moveId===b.id?null:b.id)}>שינוי מועד</button>
               <${ConfirmButton} label="ביטול" confirmLabel="לאשר ביטול?" onConfirm=${()=>patch(b.id,{status:'cancelled'},'הראיון בוטל והשעה התפנתה')}/>`}
+            <${ConfirmButton} label="מחיקה" confirmLabel="למחוק לצמיתות?" className="btn ghost sm" onConfirm=${()=>del(b)}/>
           </div></td></tr>
         ${notesId===b.id&&html`<${NotesRow} b=${b} save=${t=>patch(b.id,{notes:t},'ההערה נשמרה')}/>`}
         ${moveId===b.id&&html`<tr className="notes-row"><td colSpan="7"><div className="inline-form"><div className="field"><label htmlFor=${'mv'+b.id}>מועד חדש (שעון ישראל)</label>
