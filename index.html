@@ -535,11 +535,14 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
   const enc=encodeURIComponent;
   function mailText(b){
     const first=(b.full_name||'').trim().split(/\s+/)[0];
-    const manage=location.href.split('#')[0]+'#manage-'+b.token;
-    const lines=['היי '+first+',','','תודה שנרשמת לתוכנית HERizon! קבענו שיחת היכרות קצרה (כ-10 דקות):','',
-      'תאריך: '+fmtDate(b.starts_at),'שעה: '+fmtTime(b.starts_at)+' (שעון ישראל)'];
-    if(meet)lines.push('קישור לשיחה: '+meet);
-    lines.push('','לשינוי או ביטול השיחה: '+manage,'','מחכות להכיר אותך,','צוות HERizon');
+    const lines=['היי '+first+',','',
+      'שמחות שקבעת איתנו שיחת היכרות לתוכנית HERizon מבית DDos Women! 💜',
+      'מחכות להכיר אותך קצת יותר, לשמוע על הדרך המקצועית שלך ועל מה שאת מחפשת בשלב הבא.','',
+      'פרטי השיחה שלנו:',
+      '📅 תאריך: '+fmtDate(b.starts_at),
+      '🕒 שעה: '+fmtTime(b.starts_at)];
+    if(meet)lines.push('💻 Google Meet: '+meet);
+    lines.push('','השיחה תימשך כ-10 דקות.','','נתראה בקרוב!','אסתי וארבל','HERizon | DDos Women');
     return {subject:'HERizon | שיחת ההיכרות שלנו, '+fmtDate(b.starts_at)+' בשעה '+fmtTime(b.starts_at),body:lines.join('\n')};}
   const mailHref=b=>{const m=mailText(b);return 'https://mail.google.com/mail/?view=cm&fs=1&to='+enc(b.email)+'&su='+enc(m.subject)+'&body='+enc(m.body);};
   const inviteHref=b=>{const st=ms=>new Date(ms).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),t=Date.parse(b.starts_at);
