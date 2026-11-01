@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+</head>
+<body>
+<title>HERizon | שיחת היכרות</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap">
+<style>
+/* Layout: one centred column (max 980px). Deep-purple "horizon" panel on top, cream page, white cards. */
+:root{
+  --bg:#FAF6EF; --surface:#FFFFFF; --ink:#2B1745; --muted:#6C5D80; --line:#E7DFF1;
+  --brand:#4A2377; --brand-ink:#FFFFFF; --brand-soft:#EEE7F8; --lav:#CDBDEB; --lav-strong:#9C82D1;
+  --hero:#34165A; --hero-ink:#FBF7F0; --hero-dim:#CDBDEB;
+  --ok:#23704F; --ok-bg:#E3F3EA; --warn:#8F5F0D; --warn-bg:#FBF0D9; --bad:#A4304A; --bad-bg:#FBE4E9;
+  --shadow:0 1px 2px rgba(43,23,69,.06),0 8px 28px rgba(43,23,69,.07);
+  --font-display:'Frank Ruhl Libre','David Libre',Georgia,serif;
+  --font-body:'Assistant','Heebo','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#150D22; --surface:#211433; --ink:#F2EBFA; --muted:#B5A6CB; --line:#37264F;
+  --brand:#B79CEB; --brand-ink:#1A0F2B; --brand-soft:#2E1F49; --lav:#4B3573; --lav-strong:#B79CEB;
+  --hero:#2A1248; --hero-ink:#FBF7F0; --hero-dim:#CDBDEB;
+  --ok:#7ED3A8; --ok-bg:#16352A; --warn:#EBC272; --warn-bg:#3A2D12; --bad:#F29AAF; --bad-bg:#3E1822;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#150D22; --surface:#211433; --ink:#F2EBFA; --muted:#B5A6CB; --line:#37264F;
+  --brand:#B79CEB; --brand-ink:#1A0F2B; --brand-soft:#2E1F49; --lav:#4B3573; --lav-strong:#B79CEB;
+  --hero:#2A1248; --hero-ink:#FBF7F0; --hero-dim:#CDBDEB;
+  --ok:#7ED3A8; --ok-bg:#16352A; --warn:#EBC272; --warn-bg:#3A2D12; --bad:#F29AAF; --bad-bg:#3E1822;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35); color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.55;
+  padding-block:20px 36px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--font-display);font-weight:500;margin:0;text-wrap:balance;line-height:1.25}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--lav-strong);outline-offset:2px}
+a{color:var(--brand)}
+.wordmark{font-family:var(--font-display);letter-spacing:.02em;direction:ltr;unicode-bidi:isolate;display:inline-block}
+.wordmark b{font-weight:700}
+.wordmark span{font-weight:400}
+
+/* hero */
+.hero{position:relative;overflow:hidden;background:var(--hero);color:var(--hero-ink);border-radius:22px;padding:30px 26px 74px}
+.hero .mark{font-size:20px}
+.hero h1{font-size:clamp(30px,6.4vw,46px);margin-top:20px;font-weight:500}
+.hero .tag{margin-top:6px;font-family:var(--font-display);font-style:italic;color:var(--hero-dim);direction:ltr;text-align:right;font-size:17px;letter-spacing:.03em}
+.hero svg{position:absolute;inset-inline:0;bottom:0;width:100%;height:78px;display:block}
+.hero::after{content:"";position:absolute;inset-inline:0;bottom:0;height:2px;background:var(--hero-dim);opacity:.55}
+.hero .by{position:absolute;top:30px;inset-inline-start:26px;font-size:13px;color:var(--hero-dim)}
+.ribbon{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 14px;font-size:14px}
+
+/* generic */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+.intro{display:flex;flex-direction:column;gap:10px;font-size:17px}
+.intro .lead{font-family:var(--font-display);font-size:22px;color:var(--brand)}
+.muted{color:var(--muted)}
+.btn{border:0;border-radius:999px;background:var(--brand);color:var(--brand-ink);font-weight:700;padding:13px 26px;min-height:48px;transition:transform .12s,opacity .12s}
+.btn:hover{opacity:.92}.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--lav-strong)}
+.btn.sm{padding:6px 14px;min-height:36px;font-size:14px}
+.btn.danger{background:var(--bad);color:#fff}
+.link{background:none;border:0;color:var(--brand);text-decoration:underline;padding:4px;font-weight:600}
+.notice{border-radius:12px;padding:12px 14px;font-size:15px}
+.notice.warn{background:var(--warn-bg);color:var(--warn)}
+.notice.bad{background:var(--bad-bg);color:var(--bad)}
+.notice.ok{background:var(--ok-bg);color:var(--ok)}
+
+/* picker */
+.picker{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:26px}
+.picker h2,.section-title{font-size:20px;margin-bottom:14px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-head strong{font-family:var(--font-display);font-size:19px;font-weight:500}
+.nav-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:22px;line-height:1}
+.nav-btn[disabled]{opacity:.3;cursor:default}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-grid .dow{text-align:center;font-size:13px;color:var(--muted);padding:4px 0}
+.day{aspect-ratio:1;min-height:42px;border-radius:50%;border:0;background:transparent;color:var(--muted);opacity:.45;font-weight:400;display:grid;place-items:center;position:relative;font-variant-numeric:tabular-nums}
+.day.avail{opacity:1;background:var(--brand-soft);color:var(--brand);font-weight:700}
+.day.avail:hover{background:var(--lav)}
+.day.sel{background:var(--brand);color:var(--brand-ink);opacity:1}
+.day.today::after{content:"";position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:currentColor}
+.day[disabled]{cursor:default}
+.times{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.time{min-height:46px;border-radius:12px;border:1.5px solid var(--lav-strong);background:transparent;color:var(--brand);font-weight:700;font-variant-numeric:tabular-nums;direction:ltr}
+.time:hover,.time.sel{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.tz{font-size:13px;color:var(--muted);margin-top:12px}
+.empty{padding:26px 10px;text-align:center;color:var(--muted)}
+
+/* forms */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600;font-size:15px}
+.field input,.field select,.field textarea{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;min-height:48px;width:100%}
+.field textarea{min-height:90px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--lav-strong);outline:none;box-shadow:0 0 0 3px var(--lav)}
+.field .err{color:var(--bad);font-size:14px}
+.field .ltr{direction:ltr;text-align:right}
+.form{display:flex;flex-direction:column;gap:14px;max-width:460px}
+.chosen{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;background:var(--brand-soft);border-radius:14px;padding:12px 16px;margin-bottom:18px}
+.chosen strong{font-family:var(--font-display);font-size:19px;font-weight:500}
+.hp{position:absolute;left:-9999px;opacity:0;height:0;width:0}
+
+/* done */
+.done{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;padding:34px 22px}
+.done h2{font-size:clamp(28px,6vw,38px);color:var(--brand)}
+.when{background:var(--brand-soft);border-radius:16px;padding:14px 22px}
+.when strong{display:block;font-family:var(--font-display);font-size:22px;font-weight:500}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+
+.foot{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;color:var(--muted);font-size:14px;padding:6px 4px}
+
+/* admin */
+.top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{border:0;background:transparent;border-radius:999px;padding:9px 18px;font-weight:600;color:var(--muted);min-height:42px}
+.tab.on{background:var(--brand);color:var(--brand-ink)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.stat b{display:block;font-family:var(--font-display);font-size:34px;font-weight:500;color:var(--brand);font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:14px;color:var(--muted)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:14px}
+.toolbar .field{min-width:150px;flex:1 1 150px}
+.tbl-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{text-align:start;font-size:13px;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+td.ltr{direction:ltr;text-align:right;unicode-bidi:plaintext}
+.pill{display:inline-block;border-radius:999px;padding:3px 12px;font-size:13px;font-weight:700}
+.pill.scheduled{background:var(--brand-soft);color:var(--brand)}
+.pill.completed{background:var(--ok-bg);color:var(--ok)}
+.pill.no_show{background:var(--warn-bg);color:var(--warn)}
+.pill.cancelled{background:var(--bad-bg);color:var(--bad)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.status-sel{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 8px;min-height:36px}
+.notes-row td{background:var(--brand-soft)}
+.inline-form{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.inline-form .field{flex:1 1 220px}
+
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.wk-day{border:1px solid var(--line);border-radius:14px;padding:10px;min-height:120px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.wk-day.today{border-color:var(--lav-strong);box-shadow:0 0 0 2px var(--lav)}
+.wk-day h4{margin:0;font-size:14px;font-weight:700}
+.wk-day small{color:var(--muted)}
+.ev{border-radius:8px;padding:4px 8px;font-size:13px;line-height:1.35;background:var(--brand-soft);color:var(--brand);overflow-wrap:anywhere}
+.ev b{font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
+.ev.completed{background:var(--ok-bg);color:var(--ok)}
+.ev.no_show{background:var(--warn-bg);color:var(--warn)}
+.day-list{display:flex;flex-direction:column;gap:6px}
+.dl{display:grid;grid-template-columns:70px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.dl.open{opacity:.65}.dl.blocked{opacity:.5;background:repeating-linear-gradient(45deg,transparent 0 6px,var(--line) 6px 7px)}
+.dl b{direction:ltr;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border-radius:10px;border:1.5px solid var(--lav-strong);background:var(--brand-soft);color:var(--brand);padding:5px 10px;min-height:34px;font-size:14px;font-weight:600;direction:ltr;font-variant-numeric:tabular-nums}
+.chip.blocked{background:repeating-linear-gradient(45deg,transparent 0 5px,var(--line) 5px 6px);color:var(--muted);border-style:dashed;border-color:var(--line);text-decoration:line-through}
+.chip.booked{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);cursor:default}
+.avail-day{padding:14px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.avail-day header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:8px 16px;font-weight:600;color:var(--muted);min-height:40px}
+.seg button.on{background:var(--brand);color:var(--brand-ink)}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.toast{position:fixed;bottom:max(18px,env(safe-area-inset-bottom,0px));inset-inline:0;margin-inline:auto;width:max-content;max-width:calc(100% - 32px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:999px;box-shadow:var(--shadow);z-index:20;font-weight:600}
+.login{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+@media (max-width:760px){
+  .picker{grid-template-columns:1fr;gap:22px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wk{grid-template-columns:1fr}
+  .wk-day{min-height:0}
+  .hero{padding:24px 20px 70px}
+  .hero .by{position:static;margin-top:14px}
+  .card{padding:18px}
+  table.resp thead{display:none}
+  table.resp,table.resp tbody,table.resp tr,table.resp td{display:block;width:100%}
+  table.resp tr{border:1px solid var(--line);border-radius:14px;margin-bottom:10px;padding:6px 4px;background:var(--surface)}
+  table.resp td{border:0;display:flex;justify-content:space-between;gap:12px;padding:6px 10px;text-align:end}
+  table.resp td::before{content:attr(data-label);color:var(--muted);font-size:13px;font-weight:600;text-align:start;flex:none}
+  table.resp tr.notes-row{background:var(--brand-soft)}
+  table.resp tr.notes-row td::before{content:none}
+  td.ltr{text-align:end}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="root"></div>
+
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/htm@3.1.1/dist/htm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+document.documentElement.lang='he';document.documentElement.dir='rtl';document.body.dir='rtl';
+const {useState,useEffect,useMemo,useCallback,useRef}=React;
+const html=htm.bind(React.createElement);
+const CFG=window.HERIZON_CONFIG||{};
+const LIVE=!!(CFG.supabaseUrl&&CFG.supabaseAnonKey&&window.supabase);
+const TZ='Asia/Jerusalem', SLOT_MS=600000, LEAD_MS=3600000;
+const STATUS={scheduled:'נקבע',completed:'התקיים',no_show:'לא הגיעה',cancelled:'בוטל'};
+
+/* ---------- time helpers (all display in Israel time) ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const dtfDate=new Intl.DateTimeFormat('he-IL',{timeZone:TZ,weekday:'long',day:'numeric',month:'long'});
+const dtfShort=new Intl.DateTimeFormat('he-IL',{timeZone:TZ,weekday:'short',day:'numeric',month:'numeric'});
+const dtfTime=new Intl.DateTimeFormat('he-IL',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+const dtfKey=new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'});
+const dtfParts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const fmtDate=iso=>dtfDate.format(new Date(iso));
+const fmtTime=iso=>dtfTime.format(new Date(iso));
+const dayKey=iso=>dtfKey.format(new Date(iso));
+const todayKey=()=>dayKey(new Date().toISOString());
+function tzOffset(ms){const p={};dtfParts.formatToParts(new Date(ms)).forEach(x=>p[x.type]=x.value);
+  return Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second)-Math.floor(ms/1000)*1000;}
+function ilToUtc(key,hm){const [y,m,d]=key.split('-').map(Number),[h,mi]=hm.split(':').map(Number);
+  const guess=Date.UTC(y,m-1,d,h,mi);const u1=guess-tzOffset(guess);return new Date(guess-tzOffset(u1)).toISOString();}
+function addDays(key,n){const [y,m,d]=key.split('-').map(Number);const t=new Date(Date.UTC(y,m-1,d+n));return `${t.getUTCFullYear()}-${pad(t.getUTCMonth()+1)}-${pad(t.getUTCDate())}`;}
+const weekday=key=>{const [y,m,d]=key.split('-').map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay();};
+const fmtKey=key=>dtfDate.format(new Date(ilToUtc(key,'12:00')));
+const fmtKeyShort=key=>dtfShort.format(new Date(ilToUtc(key,'12:00')));
+function rangeSlots(key,from,to){const s=Date.parse(ilToUtc(key,from)),e=Date.parse(ilToUtc(key,to)),out=[];
+  for(let t=s;t+SLOT_MS<=e;t+=SLOT_MS)out.push(new Date(t).toISOString());return out;}
+const uid=()=>(crypto&&crypto.randomUUID)?crypto.randomUUID():'id-'+Math.random().toString(16).slice(2)+Date.now();
+const nIso=x=>new Date(x).toISOString();
+const EMAIL_RE=/^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+function calLinks(iso,meet){const s=Date.parse(iso),e=s+SLOT_MS,enc=encodeURIComponent;
+  const st=ms=>new Date(ms).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  const title='HERizon | שיחת היכרות';
+  const det='שיחת היכרות קצרה (10 דקות) לקראת תוכנית HERizon.'+(meet?'\nקישור לשיחה: '+meet:'');
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//HERizon//he','BEGIN:VEVENT','UID:'+uid()+'@herizon','DTSTAMP:'+st(Date.now()),
+    'DTSTART:'+st(s),'DTEND:'+st(e),'SUMMARY:'+title,'DESCRIPTION:'+det.replace(/\n/g,'\\n'),meet?'LOCATION:'+meet:'','END:VEVENT','END:VCALENDAR'].filter(Boolean).join('\r\n');
+  return {google:'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+enc(title)+'&dates='+st(s)+'/'+st(e)+'&details='+enc(det)+(meet?'&location='+enc(meet):''),
+    outlook:'https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject='+enc(title)+'&startdt='+enc(new Date(s).toISOString())+'&enddt='+enc(new Date(e).toISOString())+'&body='+enc(det),
+    ics:'data:text/calendar;charset=utf-8,'+enc(ics)};}
+
+/* ======================= DATA LAYER ======================= */
+/* Demo mode: everything lives in this browser only. Live mode: Supabase (see README). */
+const demoApi=(()=>{
+  const KEY='herizon-demo-v2';let mem=null;
+  const rd=()=>{try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}return mem;};
+  let db=rd();
+  const wr=()=>{mem=db;try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){}};
+  if(!db){db={slots:[],bookings:[],settings:{meet_link:'',admin_notify_email:''},admin:false};
+    const t=todayKey();
+    for(let i=0;i<21;i++){const k=addDays(t,i),wd=weekday(k);if(wd>=5)continue;
+      const rs=(wd===1||wd===3)?[['12:30','13:10'],['20:00','21:00']]:[['20:00','21:00']];
+      rs.forEach(([a,b])=>rangeSlots(k,a,b).forEach(iso=>db.slots.push({id:uid(),starts_at:iso,blocked:false})));}
+    const fut=db.slots.filter(s=>Date.parse(s.starts_at)>Date.now()+2*LEAD_MS);
+    [['נועה (דוגמה)','noa@example.com','050-0000001',2],['מיכל (דוגמה)','michal@example.com','050-0000002',5],['שירה (דוגמה)','shira@example.com','050-0000003',9]].forEach(([n,e,p,i])=>{
+      if(fut[i])db.bookings.push({id:uid(),slot_id:fut[i].id,token:uid(),full_name:n,email:e,phone:p,status:'scheduled',notes:'',starts_at:fut[i].starts_at,confirmation_sent_at:null,reminder_sent_at:null,created_at:new Date().toISOString()});});
+    wr();}
+  const act=()=>db.bookings.filter(b=>b.status!=='cancelled');
+  const taken=iso=>act().some(b=>b.starts_at===iso);
+  const usable=iso=>{const s=db.slots.find(x=>x.starts_at===iso);return s&&!s.blocked&&Date.parse(iso)>Date.now()+LEAD_MS;};
+  const tick=()=>new Promise(r=>setTimeout(r,120));
+  return {
+    mode:'demo',
+    async getOpenSlots(){await tick();return db.slots.filter(s=>!s.blocked&&Date.parse(s.starts_at)>Date.now()+LEAD_MS&&!taken(s.starts_at)).map(s=>s.starts_at).sort();},
+    async bookSlot(iso,{name,email,phone}){await tick();
+      if(name.trim().length<2||!EMAIL_RE.test(email.trim())||phone.trim().length<7)return {ok:false,error:'invalid'};
+      if(!usable(iso)||taken(iso))return {ok:false,error:'unavailable'};
+      if(act().some(b=>b.email.toLowerCase()===email.trim().toLowerCase()&&b.status==='scheduled'&&Date.parse(b.starts_at)>Date.now()))return {ok:false,error:'already_booked'};
+      const s=db.slots.find(x=>x.starts_at===iso);
+      const b={id:uid(),slot_id:s.id,token:uid(),full_name:name.trim(),email:email.trim().toLowerCase(),phone:phone.trim(),status:'scheduled',notes:'',starts_at:iso,confirmation_sent_at:null,reminder_sent_at:null,created_at:new Date().toISOString()};
+      db.bookings.push(b);wr();return {ok:true,token:b.token,starts_at:iso,meet_link:db.settings.meet_link||''};},
+    async getBooking(token){await tick();const b=db.bookings.find(x=>x.token===token);
+      return b?{ok:true,name:b.full_name,starts_at:b.starts_at,status:b.status,meet_link:db.settings.meet_link||''}:{ok:false};},
+    async cancelByToken(token){const b=db.bookings.find(x=>x.token===token&&x.status==='scheduled'&&Date.parse(x.starts_at)>Date.now());
+      if(!b)return {ok:false};b.status='cancelled';wr();return {ok:true};},
+    async rescheduleByToken(token,iso){const b=db.bookings.find(x=>x.token===token&&x.status==='scheduled'&&Date.parse(x.starts_at)>Date.now());
+      if(!b)return {ok:false,error:'not_scheduled'};if(!usable(iso)||taken(iso))return {ok:false,error:'unavailable'};
+      b.starts_at=iso;b.slot_id=db.slots.find(x=>x.starts_at===iso).id;wr();return {ok:true,starts_at:iso};},
+    async notify(){return {ok:false,reason:'demo'};},
+    /* admin */
+    async session(){return !!db.admin;},
+    async login(email,pw){await tick();if(pw==='demo'){db.admin=true;wr();return {ok:true};}return {ok:false,error:'סיסמה שגויה. בהדגמה הסיסמה היא demo'};},
+    async logout(){db.admin=false;wr();},
+    async listSlots(){return db.slots.map(s=>({...s}));},
+    async listBookings(){return db.bookings.map(b=>({...b})).sort((a,b)=>a.starts_at.localeCompare(b.starts_at));},
+    async addSlots(isos){let n=0;isos.forEach(iso=>{if(!db.slots.some(s=>s.starts_at===iso)){db.slots.push({id:uid(),starts_at:iso,blocked:false});n++;}});wr();return n;},
+    async setBlocked(isos,v){let n=0;db.slots.forEach(s=>{if(isos.includes(s.starts_at)){s.blocked=v;n++;}});wr();return n;},
+    async deleteSlots(isos){const before=db.slots.length;db.slots=db.slots.filter(s=>!(isos.includes(s.starts_at)&&!taken(s.starts_at)));wr();return before-db.slots.length;},
+    async updateBooking(id,patch){const b=db.bookings.find(x=>x.id===id);
+      if(patch.status==='scheduled'&&b.status==='cancelled'&&taken(b.starts_at))return {ok:false,error:'המשבצת כבר תפוסה'};
+      Object.assign(b,patch);wr();return {ok:true};},
+    async moveBooking(id,iso){const b=db.bookings.find(x=>x.id===id);if(!usable(iso)||act().some(x=>x.starts_at===iso&&x.id!==id))return {ok:false,error:'unavailable'};
+      b.starts_at=iso;b.slot_id=db.slots.find(x=>x.starts_at===iso).id;wr();return {ok:true};},
+    async sendReminder(){return {ok:false,reason:'demo'};},
+    async sendInvite(){return {ok:false,reason:'demo'};},
+    async getSettings(){return {...db.settings};},
+    async saveSettings(s){db.settings={...db.settings,...s};wr();return {ok:true};},
+    resetDemo(){try{localStorage.removeItem(KEY);}catch(e){}location.reload();}
+  };})();
+
+const makeLiveApi=()=>{
+  const sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey);
+  const norm=r=>({...r,starts_at:nIso(r.starts_at)});
+  async function all(table,order){let out=[],from=0;for(;;){const {data,error}=await sb.from(table).select('*').order(order).range(from,from+999);
+    if(error)throw error;out=out.concat(data);if(data.length<1000)break;from+=1000;}return out;}
+  const fn=async(body)=>{try{const {data,error}=await sb.functions.invoke('send-email',{body});
+    if(error)return {ok:false,reason:'failed'};return data&&data.ok?{ok:true}:{ok:false,reason:(data&&data.reason)||'failed'};}catch(e){return {ok:false,reason:'failed'};}};
+  const adminMail=async(action,id)=>{const {data:s}=await sb.auth.getSession();
+    try{const {data,error}=await sb.functions.invoke('send-email',{body:{action,booking_id:id},headers:{Authorization:'Bearer '+s.session.access_token}});
+      if(error)return {ok:false,reason:'failed'};return data&&data.ok?{ok:true}:{ok:false,reason:(data&&data.reason)||'failed'};}catch(e){return {ok:false,reason:'failed'};}};
+  const rpc=async(name,args)=>{const {data,error}=await sb.rpc(name,args);if(error)throw error;return data;};
+  return {
+    mode:'live',
+    async getOpenSlots(){const d=await rpc('get_open_slots');return d.map(r=>nIso(r.starts_at));},
+    async bookSlot(iso,{name,email,phone}){const r=await rpc('book_slot',{p_starts_at:iso,p_name:name,p_email:email,p_phone:phone});if(r.ok)r.starts_at=nIso(r.starts_at);return r;},
+    async getBooking(token){const r=await rpc('get_booking_by_token',{p_token:token});if(r.ok)r.starts_at=nIso(r.starts_at);return r;},
+    async cancelByToken(token){return rpc('cancel_booking_by_token',{p_token:token});},
+    async rescheduleByToken(token,iso){return rpc('reschedule_booking_by_token',{p_token:token,p_new:iso});},
+    async notify(token){return fn({action:'confirmation',token});},
+    async session(){const {data}=await sb.auth.getSession();if(!data.session)return false;const {data:ok}=await sb.rpc('is_admin');return !!ok;},
+    async login(email,pw){const {error}=await sb.auth.signInWithPassword({email:email.trim(),password:pw});
+      if(error)return {ok:false,error:'אימייל או סיסמה שגויים'};
+      const {data:ok}=await sb.rpc('is_admin');if(!ok){await sb.auth.signOut();return {ok:false,error:'למשתמשת הזו אין הרשאת ניהול'};}return {ok:true};},
+    async logout(){await sb.auth.signOut();},
+    async listSlots(){return (await all('slots','starts_at')).map(norm);},
+    async listBookings(){return (await all('bookings','starts_at')).map(norm);},
+    async addSlots(isos){return rpc('admin_add_slots',{p_starts:isos});},
+    async setBlocked(isos,v){return rpc('admin_set_blocked',{p_starts:isos,p_blocked:v});},
+    async deleteSlots(isos){return rpc('admin_delete_slots',{p_starts:isos});},
+    async updateBooking(id,patch){const {error}=await sb.from('bookings').update(patch).eq('id',id);
+      if(error)return {ok:false,error:error.code==='23505'?'המשבצת כבר תפוסה':error.message};return {ok:true};},
+    async moveBooking(id,iso){return rpc('admin_move_booking',{p_id:id,p_new:iso});},
+    async sendReminder(id){return adminMail('reminder',id);},
+    async sendInvite(id){return adminMail('invite',id);},
+    async getSettings(){const {data,error}=await sb.from('settings').select('*');if(error)throw error;const o={};data.forEach(r=>o[r.key]=r.value);return o;},
+    async saveSettings(s){const rows=Object.entries(s).map(([key,value])=>({key,value}));const {error}=await sb.from('settings').upsert(rows);return error?{ok:false,error:error.message}:{ok:true};}
+  };};
+const api=LIVE?makeLiveApi():demoApi;
+
+/* ======================= SHARED UI ======================= */
+const Wordmark=({className})=>html`<span className=${'wordmark '+(className||'')}><b>HER</b><span>izon</span></span>`;
+function Hero({title,children}){
+  return html`<header className="hero">
+    <${Wordmark} className="mark"/>
+    <h1>${title}</h1>
+    <div className="tag">Connect. Grow. Belong.</div>
+    ${children}
+    <svg viewBox="0 0 300 78" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <circle cx="150" cy="78" r="44" fill="#CDBDEB" opacity=".95"/>
+      <circle cx="150" cy="78" r="62" fill="none" stroke="#CDBDEB" stroke-opacity=".38"/>
+      <circle cx="150" cy="78" r="76" fill="none" stroke="#CDBDEB" stroke-opacity=".18"/>
+    </svg></header>`;}
+const DemoRibbon=()=>api.mode==='demo'?html`<div className="ribbon" role="status">מצב הדגמה: הנתונים נשמרים בדפדפן הזה בלבד ולא נשלחים מיילים. אחרי חיבור Supabase (ראי README) המערכת עובדת בפועל.</div>`:null;
+function Footer(){return html`<footer className="foot"><span><${Wordmark}/> · קהילת DDos Women</span><a href="#admin">כניסת צוות</a></footer>`;}
+
+function MonthPicker({days,selected,onSelect}){
+  const keys=useMemo(()=>[...days.keys()].sort(),[days]);const first=keys[0],last=keys[keys.length-1];
+  const [ym,setYm]=useState((first||todayKey()).slice(0,7));
+  useEffect(()=>{if(first&&!selected)setYm(first.slice(0,7));},[first]);
+  const [y,m]=ym.split('-').map(Number);
+  const dim=new Date(Date.UTC(y,m,0)).getUTCDate(),off=new Date(Date.UTC(y,m-1,1)).getUTCDay();
+  const cells=[];for(let i=0;i<off;i++)cells.push(null);for(let d=1;d<=dim;d++)cells.push(`${y}-${pad(m)}-${pad(d)}`);
+  const shift=n=>{const d=new Date(Date.UTC(y,m-1+n,1));setYm(`${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}`);};
+  const title=new Intl.DateTimeFormat('he-IL',{timeZone:'UTC',month:'long',year:'numeric'}).format(new Date(Date.UTC(y,m-1,15)));
+  const canPrev=ym>todayKey().slice(0,7),canNext=last&&ym<last.slice(0,7),today=todayKey();
+  return html`<div>
+    <div className="cal-head">
+      <button className="nav-btn" onClick=${()=>shift(-1)} disabled=${!canPrev} aria-label="החודש הקודם">›</button>
+      <strong>${title}</strong>
+      <button className="nav-btn" onClick=${()=>shift(1)} disabled=${!canNext} aria-label="החודש הבא">‹</button>
+    </div>
+    <div className="cal-grid" role="grid">
+      ${['א','ב','ג','ד','ה','ו','ש'].map(d=>html`<div key=${d} className="dow">${d}</div>`)}
+      ${cells.map((k,i)=>k===null?html`<div key=${'e'+i}/>`:html`<button key=${k} disabled=${!days.has(k)}
+        className=${'day'+(days.has(k)?' avail':'')+(selected===k?' sel':'')+(k===today?' today':'')}
+        onClick=${()=>onSelect(k)} aria-label=${fmtKey(k)+(days.has(k)?'':' — אין מועדים')}>${+k.slice(8)}</button>`)}
+    </div></div>`;}
+
+/* Calendar + time list. onPick(iso) */
+function SlotPicker({slots,loading,error,onRetry,onPick,pickedIso}){
+  const days=useMemo(()=>{const m=new Map();slots.forEach(iso=>{const k=dayKey(iso);if(!m.has(k))m.set(k,[]);m.get(k).push(iso);});return m;},[slots]);
+  const [day,setDay]=useState(null);
+  const timesRef=useRef(null);
+  useEffect(()=>{if(day&&!days.has(day))setDay(null);},[days]);
+  if(loading)return html`<div className="empty" role="status">טוענות מועדים פנויים…</div>`;
+  if(error)return html`<div className="empty"><p>לא הצלחנו לטעון את המועדים הפנויים.</p><p><button className="link" onClick=${onRetry}>לנסות שוב</button></p></div>`;
+  if(!days.size)return html`<div className="empty">כרגע אין מועדים פנויים לשיחות היכרות.<br/>נפתח מועדים נוספים בקרוב, אפשר לחזור לכאן בהמשך.</div>`;
+  const choose=k=>{setDay(k);setTimeout(()=>{try{if(window.innerWidth<=760&&timesRef.current)timesRef.current.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){}},60);};
+  return html`<div className="picker">
+    <div><h2>בחרי תאריך</h2><${MonthPicker} days=${days} selected=${day} onSelect=${choose}/></div>
+    <div ref=${timesRef}><h2>${day?fmtKey(day):'בחרי שעה'}</h2>
+      ${day?html`<div className="times">${days.get(day).map(iso=>html`<button key=${iso} className=${'time'+(pickedIso===iso?' sel':'')} onClick=${()=>onPick(iso)}>${fmtTime(iso)}</button>`)}</div>`
+           :html`<p className="muted">בחרי יום מסומן בלוח כדי לראות את השעות הפנויות.</p>`}
+      <p className="tz">השעות מוצגות לפי שעון ישראל · כל שיחה נמשכת 10 דקות</p></div></div>`;}
+
+function useSlots(){
+  const [slots,setSlots]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(false);
+  const load=useCallback(async()=>{setLoading(true);setError(false);try{setSlots(await api.getOpenSlots());}catch(e){setError(true);}setLoading(false);},[]);
+  useEffect(()=>{load();},[load]);
+  return {slots,loading,error,load};}
+
+function Done({res,heading,reschedule}){
+  const [mail,setMail]=useState('sending');
+  useEffect(()=>{let on=true;api.notify(res.token).then(r=>{if(on)setMail(r.ok?'sent':(r.reason==='demo'?'demo':'failed'));});return()=>{on=false;};},[]);
+  const links=calLinks(res.starts_at,res.meet_link);
+  const manage=location.href.split('#')[0]+'#manage-'+res.token;
+  return html`<section className="card done" aria-live="polite">
+    <h2>${heading||'השיחה שלנו נקבעה! 💜'}</h2>
+    <p>מחכות להכיר אותך.</p>
+    <div className="when"><strong>${fmtDate(res.starts_at)}</strong><span style=${{direction:'ltr',display:'inline-block'}}>${fmtTime(res.starts_at)}</span> · שעון ישראל</div>
+    ${mail==='sending'&&html`<p className="muted">שולחות לך אישור במייל…</p>`}
+    ${mail==='sent'&&html`<p>פרטי השיחה נשלחו אלייך למייל.</p>`}
+    ${mail==='failed'&&html`<div className="notice warn">השיחה נקבעה, אבל לא הצלחנו לשלוח מייל אישור. כדאי לשמור את הפרטים שבעמוד הזה או להוסיף ליומן.</div>`}
+    ${mail==='demo'&&html`<div className="notice warn">הדגמה: מייל אישור לא נשלח בפועל כי שירות המיילים עדיין לא מחובר.</div>`}
+    ${res.meet_link&&html`<p>קישור לשיחה: <a href=${res.meet_link} target="_blank" rel="noopener" style=${{direction:'ltr',display:'inline-block'}}>${res.meet_link}</a></p>`}
+    <div className="btn-row">
+      <a className="btn ghost sm" href=${links.google} target="_blank" rel="noopener">הוספה ל-Google Calendar</a>
+      <a className="btn ghost sm" href=${links.outlook} target="_blank" rel="noopener">הוספה ל-Outlook</a>
+      <a className="btn ghost sm" href=${links.ics} download="herizon-interview.ics">קובץ יומן (ICS)</a>
+    </div>
+    ${api.mode==='demo'&&html`<p className="muted" style=${{fontSize:14}}>לינק אישי לשינוי או ביטול: <a href=${'#manage-'+res.token}>פתיחה</a></p>`}
+    <p style=${{marginTop:6}}>נתראה בקרוב,<br/>צוות HERizon</p></section>`;}
+
+/* ======================= CANDIDATE: BOOKING ======================= */
+function Booking(){
+  const {slots,loading,error,load}=useSlots();
+  const [step,setStep]=useState('pick'),[iso,setIso]=useState(null),[notice,setNotice]=useState('');
+  const [f,setF]=useState({name:'',email:'',phone:'',website:''}),[errs,setErrs]=useState({}),[busy,setBusy]=useState(false),[res,setRes]=useState(null);
+  const set=(k,v)=>setF(p=>({...p,[k]:v}));
+  function validate(){const e={};if(f.name.trim().length<2)e.name='נשמח לשם מלא';
+    if(!EMAIL_RE.test(f.email.trim()))e.email='כתובת המייל לא נראית תקינה';
+    const digits=f.phone.replace(/\D/g,'');if(digits.length<9||digits.length>15||!/^[\d\s\-+()]+$/.test(f.phone.trim()))e.phone='מספר הטלפון לא נראה תקין';
+    setErrs(e);return !Object.keys(e).length;}
+  async function submit(ev){ev.preventDefault();if(f.website)return;if(!validate())return;setBusy(true);
+    let r;try{r=await api.bookSlot(iso,f);}catch(e){r={ok:false,error:'network'};}
+    setBusy(false);
+    if(r.ok){setRes(r);setStep('done');window.scrollTo({top:0,behavior:'smooth'});return;}
+    if(r.error==='unavailable'){setNotice('מצטערות, מישהי הקדימה אותך ותפסה את השעה הזו ממש עכשיו. בחרי בבקשה שעה אחרת.');setIso(null);setStep('pick');load();}
+    else if(r.error==='already_booked')setErrs({form:'כבר קבועה שיחה על כתובת המייל הזו. לשינוי או ביטול אפשר להשתמש בלינק האישי שנשלח אלייך במייל.'});
+    else setErrs({form:'משהו השתבש ולא הצלחנו לקבוע את השיחה. נסי שוב בעוד רגע.'});}
+  return html`<div className="wrap">
+    <${DemoRibbon}/>
+    <${Hero} title="HERizon | שיחת היכרות"/>
+    ${step!=='done'&&html`<section className="card intro">
+      <p className="lead">איזה כיף שהבעת עניין בתוכנית HERizon!</p>
+      <p>אנחנו מתחילות את שלב שיחות ההיכרות עם המועמדות לתוכנית.</p>
+      <p>נשמח להכיר אותך קצת יותר, לשמוע על הדרך המקצועית שלך ועל מה שאת מחפשת להשיג מהתוכנית.</p>
+      <p>השיחה תימשך כ-10 דקות בלבד.</p>
+      <p>בחרי את המועד שהכי נוח לך, ונתראה בקרוב!</p></section>`}
+    ${step==='pick'&&html`<section className="card">
+      ${notice&&html`<div className="notice warn" role="alert" style=${{marginBottom:16}}>${notice}</div>`}
+      <${SlotPicker} slots=${slots} loading=${loading} error=${error} onRetry=${load} pickedIso=${iso} onPick=${v=>{setIso(v);setNotice('');setStep('details');}}/></section>`}
+    ${step==='details'&&html`<section className="card">
+      <div className="chosen"><div><span className="muted">המועד שבחרת</span><strong>${fmtDate(iso)} · <span style=${{direction:'ltr',display:'inline-block'}}>${fmtTime(iso)}</span></strong></div>
+        <button className="link" onClick=${()=>setStep('pick')}>שינוי מועד</button></div>
+      <form className="form" onSubmit=${submit} noValidate>
+        <div className="hp" aria-hidden="true"><label htmlFor="website">אל תמלאי</label><input id="website" tabIndex="-1" autoComplete="off" value=${f.website} onChange=${e=>set('website',e.target.value)}/></div>
+        <div className="field"><label htmlFor="name">שם מלא</label><input id="name" autoComplete="name" value=${f.name} onChange=${e=>set('name',e.target.value)} aria-invalid=${!!errs.name}/>${errs.name&&html`<span className="err">${errs.name}</span>`}</div>
+        <div className="field"><label htmlFor="email">כתובת מייל</label><input id="email" type="email" inputMode="email" autoComplete="email" className="ltr" value=${f.email} onChange=${e=>set('email',e.target.value)} aria-invalid=${!!errs.email}/>${errs.email&&html`<span className="err">${errs.email}</span>`}</div>
+        <div className="field"><label htmlFor="phone">מספר טלפון</label><input id="phone" type="tel" inputMode="tel" autoComplete="tel" className="ltr" value=${f.phone} onChange=${e=>set('phone',e.target.value)} aria-invalid=${!!errs.phone}/>${errs.phone&&html`<span className="err">${errs.phone}</span>`}</div>
+        ${errs.form&&html`<div className="notice bad" role="alert">${errs.form}</div>`}
+        <button className="btn" disabled=${busy}>${busy?'קובעות…':'קביעת שיחת היכרות'}</button>
+      </form></section>`}
+    ${step==='done'&&html`<${Done} res=${res}/>`}
+    <${Footer}/></div>`;}
+
+/* ======================= CANDIDATE: MANAGE (personal link) ======================= */
+function Manage({token}){
+  const [bk,setBk]=useState(null),[mode,setMode]=useState('view'),[confirmCancel,setCC]=useState(false),[res,setRes]=useState(null),[msg,setMsg]=useState('');
+  const {slots,loading,error,load}=useSlots();
+  const refresh=useCallback(async()=>{try{setBk(await api.getBooking(token));}catch(e){setBk({ok:false});}},[token]);
+  useEffect(()=>{refresh();},[refresh]);
+  async function cancel(){const r=await api.cancelByToken(token);if(r.ok){setMode('cancelled');}else setMsg('לא ניתן לבטל את השיחה (אולי היא כבר התקיימה או בוטלה).');}
+  async function pick(iso){const r=await api.rescheduleByToken(token,iso);
+    if(r.ok){setRes({token,starts_at:iso,meet_link:bk.meet_link});setMode('moved');}
+    else{setMsg('השעה הזו כבר נתפסה. בחרי בבקשה שעה אחרת.');load();}}
+  const future=bk&&bk.ok&&bk.status==='scheduled'&&Date.parse(bk.starts_at)>Date.now();
+  return html`<div className="wrap"><${DemoRibbon}/><${Hero} title="HERizon | שיחת היכרות"/>
+    ${!bk&&html`<div className="card empty">טוענות…</div>`}
+    ${bk&&!bk.ok&&html`<div className="card empty">לא מצאנו שיחה לפי הלינק הזה. אפשר לפנות אלינו במייל שקיבלת.</div>`}
+    ${mode==='moved'&&html`<${Done} res=${res} heading="המועד עודכן 💜"/>`}
+    ${mode==='cancelled'&&html`<div className="card done"><h2>השיחה בוטלה</h2><p>אם תרצי לקבוע שיחה חדשה, אפשר לחזור לעמוד ההרשמה בכל עת.</p></div>`}
+    ${bk&&bk.ok&&mode==='view'&&html`<section className="card done">
+      <h2>${bk.name}, זו השיחה שלך</h2>
+      <div className="when"><strong>${fmtDate(bk.starts_at)}</strong><span style=${{direction:'ltr',display:'inline-block'}}>${fmtTime(bk.starts_at)}</span> · שעון ישראל</div>
+      <span className=${'pill '+bk.status}>${STATUS[bk.status]}</span>
+      ${msg&&html`<div className="notice warn">${msg}</div>`}
+      ${future&&html`<div className="btn-row">
+        <button className="btn" onClick=${()=>{setMsg('');setMode('move');}}>שינוי מועד</button>
+        ${!confirmCancel?html`<button className="btn ghost" onClick=${()=>setCC(true)}>ביטול השיחה</button>`
+          :html`<button className="btn danger" onClick=${cancel}>כן, לבטל את השיחה</button>`}
+      </div>`}
+      ${!future&&html`<p className="muted">אי אפשר לשנות שיחה שכבר התקיימה או בוטלה.</p>`}</section>`}
+    ${mode==='move'&&html`<section className="card"><div style=${{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+      <h2 className="section-title" style=${{margin:0}}>בחירת מועד חדש</h2><button className="link" onClick=${()=>setMode('view')}>חזרה</button></div>
+      ${msg&&html`<div className="notice warn" style=${{marginBottom:14}}>${msg}</div>`}
+      <${SlotPicker} slots=${slots} loading=${loading} error=${error} onRetry=${load} onPick=${pick}/></section>`}
+    <${Footer}/></div>`;}
+
+/* ======================= ADMIN ======================= */
+function ConfirmButton({label,confirmLabel,onConfirm,className}){
+  const [arm,setArm]=useState(false);useEffect(()=>{if(!arm)return;const t=setTimeout(()=>setArm(false),4000);return()=>clearTimeout(t);},[arm]);
+  return html`<button className=${className||'btn ghost sm'} onClick=${()=>{if(arm){setArm(false);onConfirm();}else setArm(true);}}>${arm?confirmLabel:label}</button>`;}
+
+function Login({onIn}){
+  const [email,setEmail]=useState(''),[pw,setPw]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);
+  async function go(e){e.preventDefault();setBusy(true);setErr('');let r;try{r=await api.login(email,pw);}catch(x){r={ok:false,error:'שגיאת התחברות'};}setBusy(false);if(r.ok)onIn();else setErr(r.error);}
+  return html`<div className="wrap"><${DemoRibbon}/><${Hero} title="ניהול שיחות היכרות"/>
+    <form className="card login" onSubmit=${go}>
+      <h2>התחברות לצוות</h2>
+      <div className="field"><label htmlFor="a-email">אימייל</label><input id="a-email" type="email" className="ltr" autoComplete="username" value=${email} onChange=${e=>setEmail(e.target.value)}/></div>
+      <div className="field"><label htmlFor="a-pw">סיסמה</label><input id="a-pw" type="password" className="ltr" autoComplete="current-password" value=${pw} onChange=${e=>setPw(e.target.value)}/></div>
+      ${api.mode==='demo'&&html`<p className="muted" style=${{fontSize:14}}>בהדגמה: כל אימייל, והסיסמה <b>demo</b>.</p>`}
+      ${err&&html`<div className="notice bad" role="alert">${err}</div>`}
+      <button className="btn" disabled=${busy||!email||!pw}>${busy?'מתחברות…':'כניסה'}</button>
+      <a href="#" className="muted" style=${{fontSize:14}}>חזרה לעמוד המועמדות</a></form></div>`;}
+
+function exportXlsx(rows){
+  const data=[['שם','אימייל','טלפון','תאריך','שעה','סטטוס','הערות']].concat(rows.map(b=>[b.full_name,b.email,b.phone,dayKey(b.starts_at),fmtTime(b.starts_at),STATUS[b.status],b.notes]));
+  try{if(window.XLSX){const ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[22,28,16,12,8,10,40].map(w=>({wch:w}));const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};
+    XLSX.utils.book_append_sheet(wb,ws,'ראיונות');XLSX.writeFile(wb,'herizon-interviews.xlsx');return true;}}catch(e){}
+  return false;}
+
+function BookingsTab({bookings,openSlots,reload,toast}){
+  const [q,setQ]=useState(''),[st,setSt]=useState('all'),[notesId,setNotesId]=useState(null),[moveId,setMoveId]=useState(null);
+  const rows=bookings.filter(b=>(st==='all'||b.status===st)&&(!q||(b.full_name+b.email+b.phone).toLowerCase().includes(q.toLowerCase())));
+  async function patch(id,p,okMsg){const r=await api.updateBooking(id,p);if(!r.ok)toast(r.error||'השמירה נכשלה');else{if(okMsg)toast(okMsg);}await reload();}
+  async function remind(b){const r=await api.sendReminder(b.id);
+    if(r.ok){toast('התזכורת נשלחה ל-'+b.full_name);await reload();}
+    else toast(r.reason==='demo'?'הדגמה: שליחת מיילים עדיין לא מחוברת':r.reason==='email_not_configured'?'שירות המיילים עדיין לא הוגדר':'התזכורת לא נשלחה');}
+  async function invite(b){const r=await api.sendInvite(b.id);
+    if(r.ok){toast('זימון ליומן נשלח ל-'+b.full_name);await reload();}
+    else toast(r.reason==='demo'?'הדגמה: שליחת מיילים עדיין לא מחוברת':r.reason==='email_not_configured'?'שירות המיילים עדיין לא הוגדר':'הזימון לא נשלח');}
+  async function move(b,iso){const r=await api.moveBooking(b.id,iso);if(r.ok){toast('המועד עודכן');setMoveId(null);await reload();}else toast('השעה כבר תפוסה או לא זמינה');}
+  const byDay=useMemo(()=>{const m=new Map();openSlots.forEach(i=>{const k=dayKey(i);if(!m.has(k))m.set(k,[]);m.get(k).push(i);});return [...m.entries()];},[openSlots]);
+  return html`<section className="card">
+    <div className="toolbar">
+      <div className="field"><label htmlFor="q">חיפוש</label><input id="q" placeholder="שם, מייל או טלפון" value=${q} onChange=${e=>setQ(e.target.value)}/></div>
+      <div className="field"><label htmlFor="stf">סטטוס</label><select id="stf" value=${st} onChange=${e=>setSt(e.target.value)}><option value="all">הכול</option>${Object.entries(STATUS).map(([k,v])=>html`<option key=${k} value=${k}>${v}</option>`)}</select></div>
+      <button className="btn ghost" onClick=${()=>{if(!exportXlsx(rows))toast('הורדת הקובץ זמינה באתר המותקן (לא בתצוגה המקדימה)');}}>ייצוא לאקסל</button>
+    </div>
+    ${!rows.length?html`<div className="empty">אין ראיונות להצגה.</div>`:html`<div className="tbl-scroll"><table className="resp">
+      <thead><tr><th>שם</th><th>מייל</th><th>טלפון</th><th>תאריך</th><th>שעה</th><th>סטטוס</th><th></th></tr></thead>
+      <tbody>${rows.map(b=>html`<${React.Fragment} key=${b.id}>
+        <tr>
+          <td data-label="שם"><b>${b.full_name}</b></td>
+          <td data-label="מייל" className="ltr">${b.email}</td>
+          <td data-label="טלפון" className="ltr">${b.phone}</td>
+          <td data-label="תאריך">${fmtDate(b.starts_at)}</td>
+          <td data-label="שעה" className="ltr">${fmtTime(b.starts_at)}</td>
+          <td data-label="סטטוס"><select className="status-sel" aria-label=${'סטטוס של '+b.full_name} value=${b.status} onChange=${e=>patch(b.id,{status:e.target.value})}>${Object.entries(STATUS).map(([k,v])=>html`<option key=${k} value=${k}>${v}</option>`)}</select></td>
+          <td data-label="פעולות"><div className="acts">
+            <button className="btn ghost sm" onClick=${()=>setNotesId(notesId===b.id?null:b.id)}>הערות${b.notes?' •':''}</button>
+            ${b.status==='scheduled'&&html`<button className="btn ghost sm" onClick=${()=>invite(b)}>שליחת זימון</button>
+              <button className="btn ghost sm" onClick=${()=>remind(b)}>${b.reminder_sent_at?'תזכורת (נשלחה)':'שליחת תזכורת'}</button>
+              <button className="btn ghost sm" onClick=${()=>setMoveId(moveId===b.id?null:b.id)}>שינוי מועד</button>
+              <${ConfirmButton} label="ביטול" confirmLabel="לאשר ביטול?" onConfirm=${()=>patch(b.id,{status:'cancelled'},'הראיון בוטל והשעה התפנתה')}/>`}
+          </div></td></tr>
+        ${notesId===b.id&&html`<${NotesRow} b=${b} save=${t=>patch(b.id,{notes:t},'ההערה נשמרה')}/>`}
+        ${moveId===b.id&&html`<tr className="notes-row"><td colSpan="7"><div className="inline-form"><div className="field"><label htmlFor=${'mv'+b.id}>מועד חדש (שעון ישראל)</label>
+          <select id=${'mv'+b.id} defaultValue="" onChange=${e=>e.target.value&&move(b,e.target.value)}><option value="">בחירת שעה פנויה…</option>
+          ${byDay.map(([k,list])=>html`<optgroup key=${k} label=${fmtKey(k)}>${list.map(i=>html`<option key=${i} value=${i}>${fmtTime(i)}</option>`)}</optgroup>`)}</select></div>
+          <button className="btn ghost sm" onClick=${()=>setMoveId(null)}>סגירה</button></div></td></tr>`}
+      <//>`)}</tbody></table></div>`}
+    <p className="muted" style=${{fontSize:13,marginTop:12}}>הערות פנימיות גלויות למנהלות בלבד ולא נשלחות למועמדות.</p></section>`;}
+function NotesRow({b,save}){const [t,setT]=useState(b.notes||'');
+  return html`<tr className="notes-row"><td colSpan="7"><div className="field"><label htmlFor=${'nt'+b.id}>הערה פנימית על ${b.full_name}</label>
+    <textarea id=${'nt'+b.id} value=${t} onChange=${e=>setT(e.target.value)} placeholder="רשמי כאן רשמים מהשיחה…"/></div>
+    <div style=${{marginTop:8}}><button className="btn sm" onClick=${()=>save(t)}>שמירת הערה</button></div></td></tr>`;}
+
+function CalendarTab({slots,bookings}){
+  const [view,setView]=useState('week'),[anchor,setAnchor]=useState(todayKey());
+  const info=useMemo(()=>{const m=new Map();const get=k=>{if(!m.has(k))m.set(k,{rows:[],open:0});return m.get(k);};
+    const bmap=new Map(bookings.filter(b=>b.status!=='cancelled').map(b=>[b.starts_at,b]));
+    slots.forEach(s=>{const k=dayKey(s.starts_at),d=get(k),b=bmap.get(s.starts_at);d.rows.push({iso:s.starts_at,blocked:s.blocked,b});if(!b&&!s.blocked)d.open++;});
+    bookings.filter(b=>b.status!=='cancelled'&&!slots.some(s=>s.starts_at===b.starts_at)).forEach(b=>get(dayKey(b.starts_at)).rows.push({iso:b.starts_at,b}));
+    m.forEach(d=>d.rows.sort((a,b)=>a.iso.localeCompare(b.iso)));return m;},[slots,bookings]);
+  const start=addDays(anchor,-weekday(anchor)),step=view==='week'?7:1;
+  const days=view==='week'?[0,1,2,3,4,5,6].map(i=>addDays(start,i)):[anchor];
+  const today=todayKey();
+  return html`<section className="card">
+    <div className="toolbar" style=${{justifyContent:'space-between',alignItems:'center'}}>
+      <div className="seg"><button className=${view==='week'?'on':''} onClick=${()=>setView('week')}>שבועי</button><button className=${view==='day'?'on':''} onClick=${()=>setView('day')}>יומי</button></div>
+      <div style=${{display:'flex',gap:8,alignItems:'center'}}>
+        <button className="nav-btn" onClick=${()=>setAnchor(addDays(anchor,-step))} aria-label="הקודם">›</button>
+        <button className="btn ghost sm" onClick=${()=>setAnchor(today)}>היום</button>
+        <button className="nav-btn" onClick=${()=>setAnchor(addDays(anchor,step))} aria-label="הבא">‹</button></div></div>
+    <h3 className="section-title">${view==='week'?`${fmtKeyShort(days[0])} – ${fmtKeyShort(days[6])}`:fmtKey(anchor)}</h3>
+    ${view==='week'?html`<div className="wk">${days.map(k=>{const d=info.get(k)||{rows:[],open:0};const bs=d.rows.filter(r=>r.b);
+      return html`<div key=${k} className=${'wk-day'+(k===today?' today':'')}><h4>${fmtKeyShort(k)}</h4>
+        ${bs.map(r=>html`<div key=${r.iso} className=${'ev '+r.b.status}><b>${fmtTime(r.iso)}</b> ${r.b.full_name}</div>`)}
+        ${d.open>0&&html`<small>${d.open} משבצות פנויות</small>`}${!bs.length&&!d.open&&html`<small>—</small>`}</div>`;})}</div>`
+    :html`<div className="day-list">${(info.get(anchor)?.rows||[]).length?info.get(anchor).rows.map(r=>html`<div key=${r.iso} className=${'dl '+(r.b?'':r.blocked?'blocked':'open')}><b>${fmtTime(r.iso)}</b>
+        <span>${r.b?r.b.full_name:r.blocked?'חסום':'פנוי'}</span>${r.b&&html`<span className=${'pill '+r.b.status}>${STATUS[r.b.status]}</span>`}</div>`)
+        :html`<div className="empty">אין משבצות ביום הזה.</div>`}</div>`}</section>`;}
+
+function AvailabilityTab({slots,bookings,reload,toast}){
+  const tomorrow=addDays(todayKey(),1);
+  const [mode,setMode]=useState('add'),[date,setDate]=useState(tomorrow),[from,setFrom]=useState('20:00'),[to,setTo]=useState('22:00'),[weeks,setWeeks]=useState(1),[more,setMore]=useState(14),[busy,setBusy]=useState(false);
+  const isos=useMemo(()=>{if(!date||!from||!to||from>=to)return [];const out=[];const n=mode==='add'?Math.max(1,Math.min(26,+weeks||1)):1;
+    for(let w=0;w<n;w++)out.push(...rangeSlots(addDays(date,7*w),from,to));return out.filter(i=>Date.parse(i)>Date.now());},[mode,date,from,to,weeks]);
+  const bookedSet=useMemo(()=>new Set(bookings.filter(b=>b.status!=='cancelled').map(b=>b.starts_at)),[bookings]);
+  async function run(){if(!isos.length)return;setBusy(true);
+    try{if(mode==='add'){const n=await api.addSlots(isos);toast(n?`נוספו ${n} משבצות`:'המשבצות האלה כבר קיימות');}
+      else if(mode==='block'){const n=await api.setBlocked(isos,true);toast(n?`נחסמו ${n} משבצות`:'לא נמצאו משבצות בטווח הזה');}
+      else{const n=await api.deleteSlots(isos);toast(n?`נמחקו ${n} משבצות (משבצות עם ראיון לא נמחקות)`:'לא נמחקו משבצות');}
+      await reload();}catch(e){toast('הפעולה נכשלה: '+(e.message||''));}setBusy(false);}
+  const grouped=useMemo(()=>{const m=new Map();const t=todayKey();slots.forEach(s=>{const k=dayKey(s.starts_at);if(k<t)return;if(!m.has(k))m.set(k,[]);m.get(k).push(s);});
+    return [...m.entries()].sort((a,b)=>a[0].localeCompare(b[0]));},[slots]);
+  const bname=new Map(bookings.filter(b=>b.status!=='cancelled').map(b=>[b.starts_at,b.full_name]));
+  async function toggle(s){try{await api.setBlocked([s.starts_at],!s.blocked);await reload();}catch(e){toast('הפעולה נכשלה');}}
+  async function delDay(list){try{const n=await api.deleteSlots(list.filter(s=>!bookedSet.has(s.starts_at)).map(s=>s.starts_at));toast(`נמחקו ${n} משבצות`);await reload();}catch(e){toast('הפעולה נכשלה');}}
+  const label={add:'הוספת הזמינות',block:'חסימת השעות',delete:'מחיקת המשבצות'};
+  return html`<div style=${{display:'flex',flexDirection:'column',gap:18}}>
+    <section className="card"><h3 className="section-title">הגדרת זמינות</h3>
+      <div className="seg" role="group" aria-label="סוג פעולה" style=${{marginBottom:16}}>
+        <button className=${mode==='add'?'on':''} onClick=${()=>setMode('add')}>הוספת זמינות</button>
+        <button className=${mode==='block'?'on':''} onClick=${()=>setMode('block')}>חסימת שעות</button>
+        <button className=${mode==='delete'?'on':''} onClick=${()=>setMode('delete')}>מחיקת טווח</button></div>
+      <div className="form-grid">
+        <div className="field"><label htmlFor="av-date">תאריך</label><input id="av-date" type="date" min=${todayKey()} value=${date} onChange=${e=>setDate(e.target.value)}/></div>
+        <div className="field"><label htmlFor="av-from">משעה</label><input id="av-from" type="time" step="600" value=${from} onChange=${e=>setFrom(e.target.value)}/></div>
+        <div className="field"><label htmlFor="av-to">עד שעה</label><input id="av-to" type="time" step="600" value=${to} onChange=${e=>setTo(e.target.value)}/></div>
+        ${mode==='add'&&html`<div className="field"><label htmlFor="av-w">חזרה שבועית (מספר שבועות)</label><input id="av-w" type="number" min="1" max="26" value=${weeks} onChange=${e=>setWeeks(e.target.value)}/></div>`}</div>
+      <p className="muted" style=${{margin:'12px 0'}}>${from>=to?'שעת הסיום צריכה להיות אחרי שעת ההתחלה.':isos.length?`${mode==='add'?'ייווצרו':mode==='block'?'ייחסמו (אם קיימות)':'יימחקו (אם אין בהן ראיון)'} עד ${isos.length} משבצות של 10 דקות${mode==='add'&&weeks>1?` ב-${Math.min(26,weeks)} שבועות`:''}. אפשר להוסיף כמה טווחים באותו יום, פשוט להריץ שוב.`:'אין משבצות עתידיות בטווח הזה.'}</p>
+      <button className=${'btn'+(mode==='delete'?' danger':'')} disabled=${busy||!isos.length} onClick=${run}>${label[mode]}</button></section>
+    <section className="card"><h3 className="section-title">המשבצות שהוגדרו</h3>
+      <p className="muted" style=${{marginTop:-6,marginBottom:6,fontSize:14}}>לחיצה על משבצת פנויה חוסמת אותה, ולחיצה על משבצת חסומה פותחת אותה שוב. משבצות כהות הן ראיונות שנקבעו.</p>
+      ${!grouped.length?html`<div className="empty">עוד לא הוגדרה זמינות. התחילי מהטופס למעלה.</div>`:grouped.slice(0,more).map(([k,list])=>html`<div key=${k} className="avail-day"><header><strong>${fmtKey(k)}</strong>
+        <${ConfirmButton} label="מחיקת הפנויות ביום" confirmLabel="לאשר מחיקה?" onConfirm=${()=>delDay(list)}/></header>
+        <div className="chips">${list.map(s=>bookedSet.has(s.starts_at)?html`<span key=${s.id} className="chip booked" title=${bname.get(s.starts_at)}>${fmtTime(s.starts_at)} · ${bname.get(s.starts_at)}</span>`
+          :html`<button key=${s.id} className=${'chip'+(s.blocked?' blocked':'')} onClick=${()=>toggle(s)} aria-pressed=${s.blocked} aria-label=${fmtTime(s.starts_at)+(s.blocked?' חסומה':' פנויה')}>${fmtTime(s.starts_at)}</button>`)}</div></div>`)}
+      ${grouped.length>more&&html`<div style=${{marginTop:14}}><button className="btn ghost sm" onClick=${()=>setMore(more+14)}>הצגת ימים נוספים</button></div>`}</section></div>`;}
+
+function SettingsTab({toast}){
+  const [s,setS]=useState({meet_link:'',admin_notify_email:''}),[ok,setOk]=useState(false);
+  useEffect(()=>{api.getSettings().then(v=>{setS(p=>({...p,...v}));setOk(true);}).catch(()=>{});},[]);
+  async function save(e){e.preventDefault();const r=await api.saveSettings({meet_link:s.meet_link.trim(),admin_notify_email:s.admin_notify_email.trim()});toast(r.ok?'ההגדרות נשמרו':'השמירה נכשלה');}
+  return html`<section className="card"><h3 className="section-title">הגדרות</h3>
+    <form className="form" onSubmit=${save}>
+      <div className="field"><label htmlFor="s-meet">קישור קבוע ל-Google Meet</label><input id="s-meet" className="ltr" placeholder="https://meet.google.com/xxx-xxxx-xxx" value=${s.meet_link||''} onChange=${e=>setS({...s,meet_link:e.target.value})}/>
+        <span className="muted" style=${{fontSize:14}}>הקישור יופיע בעמוד האישור, במייל ובהזמנה ליומן.</span></div>
+      <div className="field"><label htmlFor="s-mail">מייל להתראה על ראיון חדש</label><input id="s-mail" type="email" className="ltr" value=${s.admin_notify_email||''} onChange=${e=>setS({...s,admin_notify_email:e.target.value})}/></div>
+      <button className="btn" disabled=${!ok}>שמירה</button></form>
+    <hr style=${{border:0,borderTop:'1px solid var(--line)',margin:'22px 0'}}/>
+    <p><b>מצב המערכת:</b> ${api.mode==='live'?'מחוברת ל-Supabase. הנתונים נשמרים במסד משותף.':'מצב הדגמה. הנתונים נשמרים בדפדפן הזה בלבד ולא נשלחים מיילים.'}</p>
+    ${api.mode==='demo'&&html`<p style=${{marginTop:10}}><${ConfirmButton} label="איפוס נתוני ההדגמה" confirmLabel="לאפס הכול?" onConfirm=${()=>demoApi.resetDemo()}/></p>`}</section>`;}
+
+function Admin(){
+  const [auth,setAuth]=useState('loading'),[tab,setTab]=useState('bookings'),[slots,setSlots]=useState([]),[bookings,setBookings]=useState([]),[err,setErr]=useState(''),[msg,setMsg]=useState('');
+  const toast=useCallback(m=>{setMsg(m);clearTimeout(toast.t);toast.t=setTimeout(()=>setMsg(''),3800);},[]);
+  const reload=useCallback(async()=>{try{const [s,b]=await Promise.all([api.listSlots(),api.listBookings()]);setSlots(s);setBookings(b);setErr('');}catch(e){setErr('לא הצלחנו לטעון את הנתונים: '+(e.message||''));}},[]);
+  useEffect(()=>{api.session().then(ok=>setAuth(ok?'in':'out')).catch(()=>setAuth('out'));},[]);
+  useEffect(()=>{if(auth==='in')reload();},[auth,reload]);
+  if(auth==='loading')return html`<div className="wrap"><div className="card empty">טוענות…</div></div>`;
+  if(auth==='out')return html`<${Login} onIn=${()=>setAuth('in')}/>`;
+  const now=Date.now(),active=bookings.filter(b=>b.status!=='cancelled'),taken=new Set(active.map(b=>b.starts_at));
+  const openSlots=slots.filter(s=>!s.blocked&&Date.parse(s.starts_at)>now+LEAD_MS&&!taken.has(s.starts_at)).map(s=>s.starts_at).sort();
+  const stats=[[active.length,'ראיונות שנקבעו'],[bookings.filter(b=>b.status==='completed').length,'ראיונות שהתקיימו'],
+    [active.filter(b=>b.status==='scheduled'&&Date.parse(b.starts_at)>now).length,'ראיונות שנותרו'],[openSlots.length,'משבצות פנויות']];
+  return html`<div className="wrap">
+    <${DemoRibbon}/>
+    <div className="top"><div style=${{display:'flex',alignItems:'baseline',gap:10}}><${Wordmark} className="mark"/><h1 style=${{fontSize:24}}>ניהול שיחות היכרות</h1></div>
+      <div style=${{display:'flex',gap:12,alignItems:'center'}}><a href="#">לעמוד המועמדות</a><button className="link" onClick=${async()=>{await api.logout();setAuth('out');}}>יציאה</button></div></div>
+    <div className="stats">${stats.map(([n,l])=>html`<div key=${l} className="stat"><b>${n}</b><span>${l}</span></div>`)}</div>
+    <nav className="tabs" aria-label="ניהול">${[['bookings','ראיונות'],['calendar','יומן'],['avail','זמינות'],['settings','הגדרות']].map(([k,l])=>html`<button key=${k} className=${'tab'+(tab===k?' on':'')} aria-current=${tab===k} onClick=${()=>setTab(k)}>${l}</button>`)}</nav>
+    ${err&&html`<div className="notice bad" role="alert">${err} <button className="link" onClick=${reload}>נסי שוב</button></div>`}
+    ${tab==='bookings'&&html`<${BookingsTab} bookings=${bookings} openSlots=${openSlots} reload=${reload} toast=${toast}/>`}
+    ${tab==='calendar'&&html`<${CalendarTab} slots=${slots} bookings=${bookings}/>`}
+    ${tab==='avail'&&html`<${AvailabilityTab} slots=${slots} bookings=${bookings} reload=${reload} toast=${toast}/>`}
+    ${tab==='settings'&&html`<${SettingsTab} toast=${toast}/>`}
+    ${msg&&html`<div className="toast" role="status">${msg}</div>`}</div>`;}
+
+/* ======================= ROUTER ======================= */
+function App(){
+  const [hash,setHash]=useState(location.hash.replace('#',''));
+  useEffect(()=>{const f=()=>{setHash(location.hash.replace('#',''));window.scrollTo(0,0);};window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f);},[]);
+  if(hash==='admin')return html`<${Admin}/>`;
+  if(hash.startsWith('manage-'))return html`<${Manage} key=${hash} token=${hash.slice(7)}/>`;
+  return html`<${Booking}/>`;}
+ReactDOM.createRoot(document.getElementById('root')).render(html`<${App}/>`);
+</script>
+
+</body>
+</html>
