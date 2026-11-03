@@ -412,18 +412,13 @@ function useSlots(){
   return {slots,loading,error,load};}
 
 function Done({res,heading,reschedule}){
-  const [mail,setMail]=useState('sending');
-  useEffect(()=>{let on=true;api.notify(res.token).then(r=>{if(on)setMail(r.ok?'sent':(r.reason==='demo'?'demo':'failed'));});return()=>{on=false;};},[]);
   const links=calLinks(res.starts_at,res.meet_link);
   const manage=location.href.split('#')[0]+'#manage-'+res.token;
   return html`<section className="card done" aria-live="polite">
     <h2>${heading||'השיחה שלנו נקבעה! 💜'}</h2>
     <p>מחכות להכיר אותך.</p>
     <div className="when"><strong>${fmtDate(res.starts_at)}</strong><span style=${{direction:'ltr',display:'inline-block'}}>${fmtTime(res.starts_at)}</span> · שעון ישראל</div>
-    ${mail==='sending'&&html`<p className="muted">שולחות לך אישור במייל…</p>`}
-    ${mail==='sent'&&html`<p>פרטי השיחה נשלחו אלייך למייל.</p>`}
-    ${mail==='failed'&&html`<div className="notice warn">השיחה נקבעה, אבל לא הצלחנו לשלוח מייל אישור. כדאי לשמור את הפרטים שבעמוד הזה או להוסיף ליומן.</div>`}
-    ${mail==='demo'&&html`<div className="notice warn">הדגמה: מייל אישור לא נשלח בפועל כי שירות המיילים עדיין לא מחובר.</div>`}
+    <p>מייל עם פרטי הראיון יישלח אלייך בקרוב.</p>
     ${res.meet_link&&html`<p>קישור לשיחה: <a href=${res.meet_link} target="_blank" rel="noopener" style=${{direction:'ltr',display:'inline-block'}}>${res.meet_link}</a></p>`}
     <div className="btn-row">
       <a className="btn ghost sm" href=${links.google} target="_blank" rel="noopener">הוספה ל-Google Calendar</a>
