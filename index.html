@@ -211,6 +211,7 @@ const html=htm.bind(React.createElement);
 const CFG=window.HERIZON_CONFIG||{};
 const LIVE=!!(CFG.supabaseUrl&&CFG.supabaseAnonKey&&window.supabase);
 const TZ='Asia/Jerusalem', SLOT_MS=600000, LEAD_MS=3600000;
+const SENDER_ACCOUNT='office@ddosdevs.co.il'; // החשבון שממנו נשלחים המיילים והזימונים
 const PUBLIC_URL='https://herizon-program.netlify.app/'; // הכתובת שמופיעה בלינקים שנשלחים למועמדות
 const STATUS={scheduled:'נקבע',completed:'התקיים',passed:'עברה את הראיון',no_show:'לא הגיעה',cancelled:'בוטל'};
 
@@ -549,9 +550,9 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
     if(meet)lines.push('💻 Google Meet: '+meet);
     lines.push('','השיחה תימשך כ-10 דקות.','לשינוי או ביטול השיחה: '+PUBLIC_URL+'#manage-'+b.token,'','נתראה בקרוב!','אסתי וארבל','HERizon | DDos Women');
     return {subject:'HERizon | שיחת ההיכרות שלנו, '+fmtDate(b.starts_at)+' בשעה '+fmtTime(b.starts_at),body:lines.join('\n')};}
-  const mailHref=b=>{const m=mailText(b);return 'https://mail.google.com/mail/?view=cm&fs=1&to='+enc(b.email)+'&su='+enc(m.subject)+'&body='+enc(m.body);};
+  const mailHref=b=>{const m=mailText(b);return 'https://mail.google.com/mail/?authuser='+enc(SENDER_ACCOUNT)+'&view=cm&fs=1&to='+enc(b.email)+'&su='+enc(m.subject)+'&body='+enc(m.body);};
   const inviteHref=b=>{const st=ms=>new Date(ms).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),t=Date.parse(b.starts_at);
-    return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+enc('HERizon | שיחת היכרות עם '+b.full_name)+'&dates='+st(t)+'/'+st(t+SLOT_MS)+'&ctz=Asia/Jerusalem&add='+enc(b.email)
+    return 'https://calendar.google.com/calendar/render?authuser='+enc(SENDER_ACCOUNT)+'&action=TEMPLATE&text='+enc('HERizon | שיחת היכרות עם '+b.full_name)+'&dates='+st(t)+'/'+st(t+SLOT_MS)+'&ctz=Asia/Jerusalem&add='+enc(b.email)
       +'&details='+enc('שיחת היכרות קצרה (10 דקות) לקראת תוכנית HERizon.'+(meet?'\nקישור לשיחה: '+meet:''))+(meet?'&location='+enc(meet):'');};
   async function del(b){const r=await api.deleteBooking(b.id);if(r.ok){toast('הרשומה של '+b.full_name+' נמחקה');setNotesId(null);setMoveId(null);}else toast('המחיקה נכשלה');await reload();}
   async function markSent(b){try{await api.updateBooking(b.id,{confirmation_sent_at:new Date().toISOString()});await reload();}catch(e){}}
