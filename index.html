@@ -68,7 +68,7 @@ a{color:var(--brand)}
 .muted{color:var(--muted)}
 .btn{border:0;border-radius:999px;background:var(--brand);color:var(--brand-ink);font-weight:700;padding:13px 26px;min-height:48px;transition:transform .12s,opacity .12s}
 .btn:hover{opacity:.92}.btn:active{transform:scale(.98)}
-.btn[disabled]{opacity:.5;cursor:default}
+.btn[disabled],.btn.disabled{opacity:.5;cursor:default;pointer-events:none}
 .btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--lav-strong)}
 .btn.sm{padding:6px 14px;min-height:36px;font-size:14px}
 .btn.danger{background:var(--bad);color:#fff}
@@ -668,6 +668,45 @@ function SettingsTab({toast,onSaved}){
     <p><b>מצב המערכת:</b> ${api.mode==='live'?'מחוברת ל-Supabase. הנתונים נשמרים במסד משותף.':'מצב הדגמה. הנתונים נשמרים בדפדפן הזה בלבד ולא נשלחים מיילים.'}</p>
     ${api.mode==='demo'&&html`<p style=${{marginTop:10}}><${ConfirmButton} label="איפוס נתוני ההדגמה" confirmLabel="לאפס הכול?" onConfirm=${()=>demoApi.resetDemo()}/></p>`}</section>`;}
 
+
+/* ======================= REMINDER TO A LIST ======================= */
+const REMINDER_SUBJECT='HERizon | תזכורת: עוד לא קבעת שיחת היכרות 💜';
+const REMINDER_LINES=['היי,','','רצינו להזכיר שעדיין לא קבעת איתנו שיחת היכרות קצרה לתוכנית HERizon של DDos Women. 💜','','השיחה נמשכת כ-10 דקות בלבד, והיא הזדמנות עבורנו להכיר אותך, לשמוע על הדרך המקצועית שלך ועל מה שאת מחפשת בשלב הבא, ולתת לך מקום לשאול אותנו הכול.','','📅 לבחירת מועד שנוח לך:','@@LINK@@','','אין צורך בהכנה מראש, רק להגיע כמו שאת. 🙂','','מחכות להכיר אותך!','','אסתי וארבל','HERizon | DDos Women'];
+const REMINDER_DEFAULT_LIST=['arbeli56@gmail.com','shira4488@gmail.com','3yaeli@gmail.com','Liatbd@gmail.com','r583209640@gmail.com','efratifergan.career@gmail.com','riki.w5501@gmail.com','gmiryamf@gmail.com','m0534147159@gmail.com','Yehudither@gmail.com','hilaf1.cohen@gmail.com','Hani0526598787@gmail.com'];
+function reminderHtml(){
+  const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const st='direction:rtl;text-align:right;unicode-bidi:plaintext;margin:0';
+  return '<div dir="rtl" style="direction:rtl;text-align:right">'+REMINDER_LINES.map(l=>{
+    if(l==='')return '<div dir="rtl" style="'+st+'"><br></div>';
+    if(l==='@@LINK@@')return '<div dir="rtl" style="'+st+'"><a href="'+PUBLIC_URL+'">'+PUBLIC_URL+'</a></div>';
+    return '<div dir="rtl" style="'+st+'">'+esc(l)+'</div>';}).join('')+'</div>';}
+function reminderText(){return REMINDER_LINES.map(l=>l==='@@LINK@@'?PUBLIC_URL:l).join('\n');}
+
+function ReminderTab({bookings,toast}){
+  const KEY='herizon_reminder_list';
+  const [raw,setRaw]=useState(()=>{try{const v=localStorage.getItem(KEY);if(v!==null)return v;}catch(e){}return REMINDER_DEFAULT_LIST.join('\n');});
+  useEffect(()=>{try{localStorage.setItem(KEY,raw);}catch(e){}},[raw]);
+  const booked=new Set(bookings.filter(b=>b.status!=='cancelled').map(b=>b.email.trim().toLowerCase()));
+  const all=[...new Set(raw.split(/[\s,;]+/).map(x=>x.trim()).filter(x=>EMAIL_RE.test(x)))];
+  const skip=all.filter(e=>booked.has(e.toLowerCase())),send=all.filter(e=>!booked.has(e.toLowerCase()));
+  const enc=encodeURIComponent;
+  const gmail='https://mail.google.com/mail/?authuser='+enc(SENDER_ACCOUNT)+'&view=cm&fs=1&to='+enc(SENDER_ACCOUNT)+'&bcc='+enc(send.join(','))+'&su='+enc(REMINDER_SUBJECT);
+  async function copy(){
+    const h=reminderHtml(),t=reminderText();
+    try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([h],{type:'text/html'}),'text/plain':new Blob([t],{type:'text/plain'})})]);toast('ההודעה הועתקה. הדביקי אותה בגוף המייל');return;}catch(e){}
+    try{const d=document.createElement('div');d.innerHTML=h;d.style.position='fixed';d.style.top='0';d.style.opacity='0';document.body.appendChild(d);const r=document.createRange();r.selectNodeContents(d);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);const ok=document.execCommand('copy');sel.removeAllRanges();d.remove();toast(ok?'ההודעה הועתקה. הדביקי אותה בגוף המייל':'ההעתקה נכשלה');}catch(e){toast('ההעתקה נכשלה');}}
+  return html`<section className="card"><h3 className="section-title">מייל תזכורת לרשימה</h3>
+    <div className="field"><label htmlFor="r-list">כתובות מייל (אחת בכל שורה, או מופרדות בפסיקים)</label>
+      <textarea id="r-list" className="ltr" rows="8" value=${raw} onChange=${e=>setRaw(e.target.value)}></textarea>
+      <span className="muted" style=${{fontSize:14}}>הרשימה נשמרת בדפדפן הזה.</span></div>
+    <p><b>${send.length}</b> כתובות ייכנסו ל-Bcc${skip.length?html` · דולגו ${skip.length} שכבר קבעו ראיון: <span className="ltr" style=${{display:'inline-block'}}>${skip.join(', ')}</span>`:''}</p>
+    <h4 style=${{margin:'16px 0 6px'}}>תצוגה מקדימה</h4>
+    <div className="notice" style=${{background:'var(--surface)',border:'1px solid var(--line)'}}><p><b>נושא:</b> ${REMINDER_SUBJECT}</p>
+      <div dir="rtl" style=${{textAlign:'right',whiteSpace:'pre-wrap',marginTop:8}}>${reminderText()}</div></div>
+    <ol style=${{margin:'14px 0',paddingInlineStart:22,lineHeight:1.9}}><li>לחצי על "העתקת ההודעה".</li><li>לחצי על "פתיחת Gmail" והדביקי בגוף המייל (Ctrl+V או Cmd+V).</li><li>בדקי שהכיוון מימין לשמאל, ואז שלחי.</li></ol>
+    <div className="btn-row"><button className="btn" onClick=${copy}>העתקת ההודעה (מיושרת לימין)</button>
+      <a className=${'btn ghost'+(send.length?'':' disabled')} href=${send.length?gmail:undefined} target="_blank" rel="noopener" onClick=${()=>{}}>פתיחת Gmail עם הנמענות</a></div></section>`;}
+
 function Admin(){
   const [auth,setAuth]=useState('loading'),[tab,setTab]=useState('bookings'),[slots,setSlots]=useState([]),[bookings,setBookings]=useState([]),[meet,setMeet]=useState(''),[err,setErr]=useState(''),[msg,setMsg]=useState('');
   const toast=useCallback(m=>{setMsg(m);clearTimeout(toast.t);toast.t=setTimeout(()=>setMsg(''),3800);},[]);
@@ -685,11 +724,12 @@ function Admin(){
     <div className="top"><div style=${{display:'flex',alignItems:'baseline',gap:10}}><${Wordmark} className="mark"/><h1 style=${{fontSize:24}}>ניהול שיחות היכרות</h1></div>
       <div style=${{display:'flex',gap:12,alignItems:'center'}}><a href="#">לעמוד המועמדות</a><button className="link" onClick=${async()=>{await api.logout();setAuth('out');}}>יציאה</button></div></div>
     <div className="stats">${stats.map(([n,l])=>html`<div key=${l} className="stat"><b>${n}</b><span>${l}</span></div>`)}</div>
-    <nav className="tabs" aria-label="ניהול">${[['bookings','ראיונות'],['calendar','יומן'],['avail','זמינות'],['settings','הגדרות']].map(([k,l])=>html`<button key=${k} className=${'tab'+(tab===k?' on':'')} aria-current=${tab===k} onClick=${()=>setTab(k)}>${l}</button>`)}</nav>
+    <nav className="tabs" aria-label="ניהול">${[['bookings','ראיונות'],['calendar','יומן'],['avail','זמינות'],['reminder','תזכורות'],['settings','הגדרות']].map(([k,l])=>html`<button key=${k} className=${'tab'+(tab===k?' on':'')} aria-current=${tab===k} onClick=${()=>setTab(k)}>${l}</button>`)}</nav>
     ${err&&html`<div className="notice bad" role="alert">${err} <button className="link" onClick=${reload}>נסי שוב</button></div>`}
     ${tab==='bookings'&&html`<${BookingsTab} bookings=${bookings} openSlots=${openSlots} reload=${reload} toast=${toast} meet=${meet}/>`}
     ${tab==='calendar'&&html`<${CalendarTab} slots=${slots} bookings=${bookings}/>`}
     ${tab==='avail'&&html`<${AvailabilityTab} slots=${slots} bookings=${bookings} reload=${reload} toast=${toast}/>`}
+    ${tab==='reminder'&&html`<${ReminderTab} bookings=${bookings} toast=${toast}/>`}
     ${tab==='settings'&&html`<${SettingsTab} toast=${toast} onSaved=${reload}/>`}
     ${msg&&html`<div className="toast" role="status">${msg}</div>`}</div>`;}
 
