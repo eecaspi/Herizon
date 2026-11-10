@@ -141,6 +141,7 @@ td.ltr{direction:ltr;text-align:right;unicode-bidi:plaintext}
 .pill.scheduled{background:var(--brand-soft);color:var(--brand)}
 .pill.completed{background:var(--ok-bg);color:var(--ok)}
 .pill.passed{background:var(--ok);color:var(--surface)}
+.pill.not_passed{background:var(--bad-bg);color:var(--bad)}
 .pill.no_show{background:var(--warn-bg);color:var(--warn)}
 .pill.cancelled{background:var(--bad-bg);color:var(--bad)}
 .acts{display:flex;gap:6px;flex-wrap:wrap}
@@ -158,6 +159,7 @@ td.ltr{direction:ltr;text-align:right;unicode-bidi:plaintext}
 .ev b{font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
 .ev.completed{background:var(--ok-bg);color:var(--ok)}
 .ev.passed{background:var(--ok);color:var(--surface)}
+.ev.not_passed{background:var(--bad-bg);color:var(--bad)}
 .ev.no_show{background:var(--warn-bg);color:var(--warn)}
 .day-list{display:flex;flex-direction:column;gap:6px}
 .dl{display:grid;grid-template-columns:70px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 12px}
@@ -213,7 +215,7 @@ const LIVE=!!(CFG.supabaseUrl&&CFG.supabaseAnonKey&&window.supabase);
 const TZ='Asia/Jerusalem', SLOT_MS=600000, LEAD_MS=3600000;
 const SENDER_ACCOUNT='office@ddosdevs.co.il'; // החשבון שממנו נשלחים המיילים והזימונים
 const PUBLIC_URL='https://herizon-program.netlify.app/'; // הכתובת שמופיעה בלינקים שנשלחים למועמדות
-const STATUS={scheduled:'נקבע',completed:'התקיים',passed:'עברה את הראיון',no_show:'לא הגיעה',cancelled:'בוטל'};
+const STATUS={scheduled:'נקבע',completed:'התקיים',passed:'עברה את הראיון',not_passed:'לא עברה',no_show:'לא הגיעה',cancelled:'בוטל'};
 
 /* ---------- time helpers (all display in Israel time) ---------- */
 const pad=n=>String(n).padStart(2,'0');
@@ -737,7 +739,7 @@ function Admin(){
   if(auth==='out')return html`<${Login} onIn=${()=>setAuth('in')}/>`;
   const now=Date.now(),active=bookings.filter(b=>b.status!=='cancelled'),taken=new Set(active.map(b=>b.starts_at));
   const openSlots=slots.filter(s=>!s.blocked&&Date.parse(s.starts_at)>now+LEAD_MS&&!taken.has(s.starts_at)).map(s=>s.starts_at).sort();
-  const stats=[[active.length,'ראיונות שנקבעו'],[bookings.filter(b=>b.status==='completed'||b.status==='passed').length,'ראיונות שהתקיימו'],[bookings.filter(b=>b.status==='passed').length,'עברו את הראיון'],
+  const stats=[[active.length,'ראיונות שנקבעו'],[bookings.filter(b=>b.status==='completed'||b.status==='passed'||b.status==='not_passed').length,'ראיונות שהתקיימו'],[bookings.filter(b=>b.status==='passed').length,'עברו את הראיון'],
     [active.filter(b=>b.status==='scheduled'&&Date.parse(b.starts_at)>now).length,'ראיונות שנותרו'],[openSlots.length,'משבצות פנויות']];
   return html`<div className="wrap">
     <${DemoRibbon}/>
