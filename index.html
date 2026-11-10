@@ -557,8 +557,8 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
     if(meet)l.push('💻 Google Meet: '+meet);
     l.push('','השיחה תימשך כ-10 דקות, ואין צורך בהכנה מראש. רק להגיע כמו שאת. 🙂','לשינוי או ביטול השיחה: '+PUBLIC_URL+'#manage-'+b.token,'','נתראה!','אסתי וארבל','HERizon | DDos Women');
     return l;}
-  const remindHref=b=>'https://mail.google.com/mail/?authuser='+enc(SENDER_ACCOUNT)+'&view=cm&fs=1&to='+enc(b.email)+'&su='+enc('HERizon | תזכורת: שיחת ההיכרות שלנו, '+fmtDate(b.starts_at)+' בשעה '+fmtTime(b.starts_at));
-  async function remind(b){const l=remindLines(b);const ok=await copyRich(linesToHtml(l),l.join('\n'));toast(ok?'ההודעה הועתקה. הדביקי אותה בגוף המייל שנפתח':'ההעתקה נכשלה. נסי שוב');
+  const remindHref=b=>'https://mail.google.com/mail/?authuser='+enc(SENDER_ACCOUNT)+'&view=cm&fs=1&to='+enc(b.email)+'&su='+enc('HERizon | תזכורת: שיחת ההיכרות שלנו, '+fmtDate(b.starts_at)+' בשעה '+fmtTime(b.starts_at))+'&body='+enc(remindLines(b).join('\n'));
+  async function remind(b){const l=remindLines(b);const ok=await copyRich(linesToHtml(l),l.join('\n'));toast(ok?'המייל נפתח עם ההודעה. אם היא מיושרת לשמאל: סמני הכול והדביקי (Cmd+V) לגרסה מיושרת לימין':'ההעתקה נכשלה, אבל ההודעה כבר בגוף המייל');
     if(ok){try{await api.updateBooking(b.id,{reminder_sent_at:new Date().toISOString()});await reload();}catch(e){}}}
   async function markSent(b){try{await api.updateBooking(b.id,{confirmation_sent_at:new Date().toISOString()});await reload();}catch(e){}}
   async function move(b,iso){const r=await api.moveBooking(b.id,iso);if(r.ok){toast('המועד עודכן');setMoveId(null);await reload();}else toast('השעה כבר תפוסה או לא זמינה');}
