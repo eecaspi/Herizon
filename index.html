@@ -550,6 +550,16 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
     return 'https://calendar.google.com/calendar/render?authuser='+enc(SENDER_ACCOUNT)+'&action=TEMPLATE&text='+enc('HERizon | שיחת היכרות עם '+b.full_name)+'&dates='+st(t)+'/'+st(t+SLOT_MS)+'&ctz=Asia/Jerusalem&add='+enc(b.email)
       +'&details='+enc('שיחת היכרות קצרה (10 דקות) לקראת תוכנית HERizon.'+(meet?'\nקישור לשיחה: '+meet:''))+(meet?'&location='+enc(meet):'');};
   async function del(b){const r=await api.deleteBooking(b.id);if(r.ok){toast('הרשומה של '+b.full_name+' נמחקה');setNotesId(null);setMoveId(null);}else toast('המחיקה נכשלה');await reload();}
+  function remindLines(b){
+    const first=(b.full_name||'').trim().split(/\s+/)[0];
+    const l=['היי '+first+',','','תזכורת קטנה לשיחת ההיכרות שלנו לתוכנית HERizon מבית DDos Women. 💜','',
+      '📅 תאריך: '+fmtDate(b.starts_at),'🕒 שעה: '+fmtTime(b.starts_at)];
+    if(meet)l.push('💻 Google Meet: '+meet);
+    l.push('','השיחה תימשך כ-10 דקות, ואין צורך בהכנה מראש. רק להגיע כמו שאת. 🙂','לשינוי או ביטול השיחה: '+PUBLIC_URL+'#manage-'+b.token,'','נתראה!','אסתי וארבל','HERizon | DDos Women');
+    return l;}
+  const remindHref=b=>'https://mail.google.com/mail/?authuser='+enc(SENDER_ACCOUNT)+'&view=cm&fs=1&to='+enc(b.email)+'&su='+enc('HERizon | תזכורת: שיחת ההיכרות שלנו, '+fmtDate(b.starts_at)+' בשעה '+fmtTime(b.starts_at));
+  async function remind(b){const l=remindLines(b);const ok=await copyRich(linesToHtml(l),l.join('\n'));toast(ok?'ההודעה הועתקה. הדביקי אותה בגוף המייל שנפתח':'ההעתקה נכשלה. נסי שוב');
+    if(ok){try{await api.updateBooking(b.id,{reminder_sent_at:new Date().toISOString()});await reload();}catch(e){}}}
   async function markSent(b){try{await api.updateBooking(b.id,{confirmation_sent_at:new Date().toISOString()});await reload();}catch(e){}}
   async function move(b,iso){const r=await api.moveBooking(b.id,iso);if(r.ok){toast('המועד עודכן');setMoveId(null);await reload();}else toast('השעה כבר תפוסה או לא זמינה');}
   const byDay=useMemo(()=>{const m=new Map();openSlots.forEach(i=>{const k=dayKey(i);if(!m.has(k))m.set(k,[]);m.get(k).push(i);});return [...m.entries()];},[openSlots]);
@@ -573,6 +583,7 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
           <td data-label="פעולות"><div className="acts">
             <button className="btn ghost sm" onClick=${()=>setNotesId(notesId===b.id?null:b.id)}>הערות${b.notes?' •':''}</button>
             ${b.status==='scheduled'&&html`<a className="btn ghost sm" href=${mailHref(b)} target="_blank" rel="noopener" onClick=${()=>markSent(b)}>${b.confirmation_sent_at?'שליחת מייל (נפתח ✓)':'שליחת מייל'}</a>
+              <a className="btn ghost sm" href=${remindHref(b)} target="_blank" rel="noopener" onClick=${()=>remind(b)}>${b.reminder_sent_at?'תזכורת (נפתח ✓)':'תזכורת'}</a>
               <a className="btn ghost sm" href=${inviteHref(b)} target="_blank" rel="noopener">זימון ביומן</a>
               <button className="btn ghost sm" onClick=${()=>setMoveId(moveId===b.id?null:b.id)}>שינוי מועד</button>
               <${ConfirmButton} label="ביטול" confirmLabel="לאשר ביטול?" onConfirm=${()=>patch(b.id,{status:'cancelled'},'הראיון בוטל והשעה התפנתה')}/>`}
@@ -668,6 +679,15 @@ function SettingsTab({toast,onSaved}){
     <p><b>מצב המערכת:</b> ${api.mode==='live'?'מחוברת ל-Supabase. הנתונים נשמרים במסד משותף.':'מצב הדגמה. הנתונים נשמרים בדפדפן הזה בלבד ולא נשלחים מיילים.'}</p>
     ${api.mode==='demo'&&html`<p style=${{marginTop:10}}><${ConfirmButton} label="איפוס נתוני ההדגמה" confirmLabel="לאפס הכול?" onConfirm=${()=>demoApi.resetDemo()}/></p>`}</section>`;}
 
+
+
+function linesToHtml(lines){
+  const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1">$1</a>');
+  const st='direction:rtl;text-align:right;unicode-bidi:plaintext;margin:0';
+  return '<div dir="rtl" style="direction:rtl;text-align:right">'+lines.map(l=>l===''?'<div dir="rtl" style="'+st+'"><br></div>':'<div dir="rtl" style="'+st+'">'+esc(l)+'</div>').join('')+'</div>';}
+async function copyRich(html,text){
+  try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([text],{type:'text/plain'})})]);return true;}catch(e){}
+  try{const d=document.createElement('div');d.innerHTML=html;d.style.position='fixed';d.style.top='0';d.style.opacity='0';document.body.appendChild(d);const r=document.createRange();r.selectNodeContents(d);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);const ok=document.execCommand('copy');sel.removeAllRanges();d.remove();return ok;}catch(e){return false;}}
 
 /* ======================= REMINDER TO A LIST ======================= */
 const REMINDER_SUBJECT='HERizon | רגע לפני שהראיונות נסגרים 💜';
