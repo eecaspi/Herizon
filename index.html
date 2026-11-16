@@ -567,7 +567,7 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
     return ['היי '+first+',','',
       'תודה רבה שהקדשת מזמנך ושיתפת אותנו בדרך המקצועית שלך. היה לנו כיף להכיר אותך. 💜','',
       'לאחר ששקלנו, החלטנו שלא להמשיך איתך בשלב זה בתוכנית HERizon. זו החלטה שאינה פשוטה לנו, והיא לא משקפת את היכולות או את הערך שלך.','',
-      'אנחנו מאחלות לך המשך דרך מוצלחת בכל מה שתבחרי, ונשמח אם תישארי בקשר.','',
+      'אנחנו מאחלות לך המשך דרך מוצלחת בכל מה שתבחרי, ונשמח להיפגש במחזורים הבאים של התוכנית.','',
       'בהערכה רבה,','אסתי וארבל','HERizon | DDos Women'];}
   const declineHref=b=>'https://mail.google.com/mail/?authuser='+enc(SENDER_ACCOUNT)+'&view=cm&fs=1&to='+enc(b.email)+'&su='+enc('HERizon | תודה על השיחה 💜')+'&body='+enc(declineLines(b).join('\n'));
   async function decline(b){const l=declineLines(b);const ok=await copyRich(linesToHtml(l),l.join('\n'));toast(ok?'המייל נפתח עם ההודעה. אם היא מיושרת לשמאל: סמני הכול והדביקי (Cmd+V) לגרסה מיושרת לימין':'ההעתקה נכשלה, אבל ההודעה כבר בגוף המייל');}
