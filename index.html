@@ -562,6 +562,15 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
   const remindHref=b=>'https://mail.google.com/mail/?authuser='+enc(SENDER_ACCOUNT)+'&view=cm&fs=1&to='+enc(b.email)+'&su='+enc('HERizon | תזכורת: שיחת ההיכרות שלנו, '+fmtDate(b.starts_at)+' בשעה '+fmtTime(b.starts_at))+'&body='+enc(remindLines(b).join('\n'));
   async function remind(b){const l=remindLines(b);const ok=await copyRich(linesToHtml(l),l.join('\n'));toast(ok?'המייל נפתח עם ההודעה. אם היא מיושרת לשמאל: סמני הכול והדביקי (Cmd+V) לגרסה מיושרת לימין':'ההעתקה נכשלה, אבל ההודעה כבר בגוף המייל');
     if(ok){try{await api.updateBooking(b.id,{reminder_sent_at:new Date().toISOString()});await reload();}catch(e){}}}
+  function declineLines(b){
+    const first=(b.full_name||'').trim().split(/\s+/)[0];
+    return ['היי '+first+',','',
+      'תודה רבה שהקדשת מזמנך ושיתפת אותנו בדרך המקצועית שלך. היה לנו כיף להכיר אותך. 💜','',
+      'לאחר ששקלנו, החלטנו שלא להמשיך איתך בשלב זה בתוכנית HERizon. זו החלטה שאינה פשוטה לנו, והיא לא משקפת את היכולות או את הערך שלך.','',
+      'אנחנו מאחלות לך המשך דרך מוצלחת בכל מה שתבחרי, ונשמח אם תישארי בקשר.','',
+      'בהערכה רבה,','אסתי וארבל','HERizon | DDos Women'];}
+  const declineHref=b=>'https://mail.google.com/mail/?authuser='+enc(SENDER_ACCOUNT)+'&view=cm&fs=1&to='+enc(b.email)+'&su='+enc('HERizon | תודה על השיחה 💜')+'&body='+enc(declineLines(b).join('\n'));
+  async function decline(b){const l=declineLines(b);const ok=await copyRich(linesToHtml(l),l.join('\n'));toast(ok?'המייל נפתח עם ההודעה. אם היא מיושרת לשמאל: סמני הכול והדביקי (Cmd+V) לגרסה מיושרת לימין':'ההעתקה נכשלה, אבל ההודעה כבר בגוף המייל');}
   async function markSent(b){try{await api.updateBooking(b.id,{confirmation_sent_at:new Date().toISOString()});await reload();}catch(e){}}
   async function move(b,iso){const r=await api.moveBooking(b.id,iso);if(r.ok){toast('המועד עודכן');setMoveId(null);await reload();}else toast('השעה כבר תפוסה או לא זמינה');}
   const byDay=useMemo(()=>{const m=new Map();openSlots.forEach(i=>{const k=dayKey(i);if(!m.has(k))m.set(k,[]);m.get(k).push(i);});return [...m.entries()];},[openSlots]);
@@ -576,7 +585,7 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
       <thead><tr><th>שם</th><th>מייל</th><th>טלפון</th><th>תאריך</th><th>שעה</th><th>סטטוס</th><th></th></tr></thead>
       <tbody>${rows.map(b=>html`<${React.Fragment} key=${b.id}>
         <tr>
-          <td data-label="שם"><b>${b.full_name}</b></td>
+          <td data-label="שם"><b>${b.full_name}</b>${b.status==='not_passed'&&html`<div style=${{marginTop:6}}><a className="btn ghost sm" href=${declineHref(b)} target="_blank" rel="noopener" onClick=${()=>decline(b)}>שליחת מייל</a></div>`}</td>
           <td data-label="מייל" className="ltr">${b.email}</td>
           <td data-label="טלפון" className="ltr">${b.phone}</td>
           <td data-label="תאריך">${fmtDate(b.starts_at)}</td>
