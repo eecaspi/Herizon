@@ -32,6 +32,7 @@ create table if not exists public.bookings (
   full_name            text not null check (char_length(full_name) between 2 and 100),
   email                text not null check (email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
   phone                text not null check (char_length(phone) between 7 and 20),
+  experience_years     smallint check (experience_years between 0 and 60),
   status               text not null default 'scheduled'
                        check (status in ('scheduled','completed','passed','not_passed','no_show','cancelled')),
   notes                text not null default '',
@@ -90,7 +91,7 @@ $$;
 
 -- קביעת ראיון. הנעילה (for update) + האינדקס הייחודי מבטיחים שרק מועמדת אחת תקבל את המשבצת
 create or replace function public.book_slot(
-  p_starts_at timestamptz, p_name text, p_email text, p_phone text
+  p_starts_at timestamptz, p_name text, p_email text, p_phone text, p_experience smallint default null
 ) returns json
 language plpgsql security definer set search_path = public as $$
 declare
@@ -104,7 +105,8 @@ begin
 
   if char_length(p_name) not between 2 and 100
      or p_email !~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'
-     or char_length(p_phone) not between 7 and 20 then
+     or char_length(p_phone) not between 7 and 20
+     or (p_experience is not null and p_experience not between 0 and 60) then
     return json_build_object('ok', false, 'error', 'invalid');
   end if;
 
@@ -120,8 +122,8 @@ begin
     return json_build_object('ok', false, 'error', 'already_booked');
   end if;
 
-  insert into public.bookings (slot_id, starts_at, full_name, email, phone)
-  values (v_slot.id, v_slot.starts_at, p_name, p_email, p_phone)
+  insert into public.bookings (slot_id, starts_at, full_name, email, phone, experience_years)
+  values (v_slot.id, v_slot.starts_at, p_name, p_email, p_phone, p_experience)
   returning token into v_token;
 
   select value into v_meet from public.settings where key = 'meet_link';
@@ -240,7 +242,7 @@ $$;
 revoke execute on all functions in schema public from public, anon, authenticated;
 
 grant execute on function public.get_open_slots()                              to anon, authenticated;
-grant execute on function public.book_slot(timestamptz, text, text, text)      to anon, authenticated;
+grant execute on function public.book_slot(timestamptz, text, text, text, smallint) to anon, authenticated;
 grant execute on function public.get_booking_by_token(uuid)                    to anon, authenticated;
 grant execute on function public.cancel_booking_by_token(uuid)                 to anon, authenticated;
 grant execute on function public.reschedule_booking_by_token(uuid, timestamptz) to anon, authenticated;

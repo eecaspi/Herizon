@@ -274,12 +274,12 @@ const demoApi=(()=>{
   return {
     mode:'demo',
     async getOpenSlots(){await tick();return db.slots.filter(s=>!s.blocked&&Date.parse(s.starts_at)>Date.now()+LEAD_MS&&!taken(s.starts_at)).map(s=>s.starts_at).sort();},
-    async bookSlot(iso,{name,email,phone}){await tick();
+    async bookSlot(iso,{name,email,phone,exp}){await tick();
       if(name.trim().length<2||!EMAIL_RE.test(email.trim())||phone.trim().length<7)return {ok:false,error:'invalid'};
       if(!usable(iso)||taken(iso))return {ok:false,error:'unavailable'};
       if(act().some(b=>b.email.toLowerCase()===email.trim().toLowerCase()&&b.status==='scheduled'&&Date.parse(b.starts_at)>Date.now()))return {ok:false,error:'already_booked'};
       const s=db.slots.find(x=>x.starts_at===iso);
-      const b={id:uid(),slot_id:s.id,token:uid(),full_name:name.trim(),email:email.trim().toLowerCase(),phone:phone.trim(),status:'scheduled',notes:'',starts_at:iso,confirmation_sent_at:null,reminder_sent_at:null,created_at:new Date().toISOString()};
+      const b={id:uid(),slot_id:s.id,token:uid(),full_name:name.trim(),email:email.trim().toLowerCase(),phone:phone.trim(),experience_years:Number(exp),status:'scheduled',notes:'',starts_at:iso,confirmation_sent_at:null,reminder_sent_at:null,created_at:new Date().toISOString()};
       db.bookings.push(b);wr();return {ok:true,token:b.token,starts_at:iso,meet_link:db.settings.meet_link||''};},
     async getBooking(token){await tick();const b=db.bookings.find(x=>x.token===token);
       return b?{ok:true,name:b.full_name,starts_at:b.starts_at,status:b.status,meet_link:db.settings.meet_link||''}:{ok:false};},
@@ -325,7 +325,9 @@ const makeLiveApi=()=>{
   return {
     mode:'live',
     async getOpenSlots(){const d=await rpc('get_open_slots');return d.map(r=>nIso(r.starts_at));},
-    async bookSlot(iso,{name,email,phone}){const r=await rpc('book_slot',{p_starts_at:iso,p_name:name,p_email:email,p_phone:phone});if(r.ok)r.starts_at=nIso(r.starts_at);return r;},
+    async bookSlot(iso,{name,email,phone,exp}){const base={p_starts_at:iso,p_name:name,p_email:email,p_phone:phone};let r;
+      try{r=await rpc('book_slot',{...base,p_experience:Number(exp)});}catch(e){if(e&&e.code==='PGRST202')r=await rpc('book_slot',base);else throw e;}
+      if(r.ok)r.starts_at=nIso(r.starts_at);return r;},
     async getBooking(token){const r=await rpc('get_booking_by_token',{p_token:token});if(r.ok)r.starts_at=nIso(r.starts_at);return r;},
     async cancelByToken(token){return rpc('cancel_booking_by_token',{p_token:token});},
     async rescheduleByToken(token,iso){return rpc('reschedule_booking_by_token',{p_token:token,p_new:iso});},
@@ -434,11 +436,12 @@ function Done({res,heading,reschedule}){
 function Booking(){
   const {slots,loading,error,load}=useSlots();
   const [step,setStep]=useState('pick'),[iso,setIso]=useState(null),[notice,setNotice]=useState('');
-  const [f,setF]=useState({name:'',email:'',phone:'',website:''}),[errs,setErrs]=useState({}),[busy,setBusy]=useState(false),[res,setRes]=useState(null);
+  const [f,setF]=useState({name:'',email:'',phone:'',exp:'',website:''}),[errs,setErrs]=useState({}),[busy,setBusy]=useState(false),[res,setRes]=useState(null);
   const set=(k,v)=>setF(p=>({...p,[k]:v}));
   function validate(){const e={};if(f.name.trim().length<2)e.name='נשמח לשם מלא';
     if(!EMAIL_RE.test(f.email.trim()))e.email='כתובת המייל לא נראית תקינה';
     const digits=f.phone.replace(/\D/g,'');if(digits.length<9||digits.length>15||!/^[\d\s\-+()]+$/.test(f.phone.trim()))e.phone='מספר הטלפון לא נראה תקין';
+    if(f.exp===''||!/^\d{1,2}$/.test(String(f.exp).trim())||Number(f.exp)>60)e.exp='נשמח למספר שנות הניסיון (0 עד 60)';
     setErrs(e);return !Object.keys(e).length;}
   async function submit(ev){ev.preventDefault();if(f.website)return;if(!validate())return;setBusy(true);
     let r;try{r=await api.bookSlot(iso,f);}catch(e){r={ok:false,error:'network'};}
@@ -467,6 +470,7 @@ function Booking(){
         <div className="field"><label htmlFor="name">שם מלא</label><input id="name" autoComplete="name" value=${f.name} onChange=${e=>set('name',e.target.value)} aria-invalid=${!!errs.name}/>${errs.name&&html`<span className="err">${errs.name}</span>`}</div>
         <div className="field"><label htmlFor="email">כתובת מייל</label><input id="email" type="email" inputMode="email" autoComplete="email" className="ltr" value=${f.email} onChange=${e=>set('email',e.target.value)} aria-invalid=${!!errs.email}/>${errs.email&&html`<span className="err">${errs.email}</span>`}</div>
         <div className="field"><label htmlFor="phone">מספר טלפון</label><input id="phone" type="tel" inputMode="tel" autoComplete="tel" className="ltr" value=${f.phone} onChange=${e=>set('phone',e.target.value)} aria-invalid=${!!errs.phone}/>${errs.phone&&html`<span className="err">${errs.phone}</span>`}</div>
+        <div className="field"><label htmlFor="exp">כמה שנות ניסיון מקצועי יש לך?</label><input id="exp" type="number" inputMode="numeric" min="0" max="60" step="1" className="ltr" value=${f.exp} onChange=${e=>set('exp',e.target.value)} aria-invalid=${!!errs.exp}/>${errs.exp&&html`<span className="err">${errs.exp}</span>`}</div>
         ${errs.form&&html`<div className="notice bad" role="alert">${errs.form}</div>`}
         <button className="btn" disabled=${busy}>${busy?'קובעות…':'קביעת שיחת היכרות'}</button>
       </form></section>`}
@@ -525,7 +529,7 @@ function Login({onIn}){
       <a href="#" className="muted" style=${{fontSize:14}}>חזרה לעמוד המועמדות</a></form></div>`;}
 
 function exportXlsx(rows){
-  const data=[['שם','אימייל','טלפון','תאריך','שעה','סטטוס','הערות']].concat(rows.map(b=>[b.full_name,b.email,b.phone,dayKey(b.starts_at),fmtTime(b.starts_at),STATUS[b.status],b.notes]));
+  const data=[['שם','אימייל','טלפון','שנות ניסיון','תאריך','שעה','סטטוס','הערות']].concat(rows.map(b=>[b.full_name,b.email,b.phone,b.experience_years==null?'':b.experience_years,dayKey(b.starts_at),fmtTime(b.starts_at),STATUS[b.status],b.notes]));
   try{if(window.XLSX){const ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[22,28,16,12,8,10,40].map(w=>({wch:w}));const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};
     XLSX.utils.book_append_sheet(wb,ws,'ראיונות');XLSX.writeFile(wb,'herizon-interviews.xlsx');return true;}}catch(e){}
   return false;}
@@ -582,12 +586,13 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
     </div>
     ${!meet&&html`<div className="notice warn" style=${{marginBottom:14}}>עוד לא הוגדר קישור Google Meet (לשונית "הגדרות"). המייל יוצא בלי קישור לשיחה.</div>`}
     ${!rows.length?html`<div className="empty">אין ראיונות להצגה.</div>`:html`<div className="tbl-scroll"><table className="resp">
-      <thead><tr><th>שם</th><th>מייל</th><th>טלפון</th><th>תאריך</th><th>שעה</th><th>סטטוס</th><th></th></tr></thead>
+      <thead><tr><th>שם</th><th>מייל</th><th>טלפון</th><th>שנות ניסיון</th><th>תאריך</th><th>שעה</th><th>סטטוס</th><th></th></tr></thead>
       <tbody>${rows.map(b=>html`<${React.Fragment} key=${b.id}>
         <tr>
           <td data-label="שם"><b>${b.full_name}</b>${b.status==='not_passed'&&html`<div style=${{marginTop:6}}><a className="btn ghost sm" href=${declineHref(b)} target="_blank" rel="noopener" onClick=${()=>decline(b)}>שליחת מייל</a></div>`}</td>
           <td data-label="מייל" className="ltr">${b.email}</td>
           <td data-label="טלפון" className="ltr">${b.phone}</td>
+          <td data-label="שנות ניסיון">${b.experience_years==null?'–':b.experience_years}</td>
           <td data-label="תאריך">${fmtDate(b.starts_at)}</td>
           <td data-label="שעה" className="ltr">${fmtTime(b.starts_at)}</td>
           <td data-label="סטטוס"><select className="status-sel" aria-label=${'סטטוס של '+b.full_name} value=${b.status} onChange=${e=>patch(b.id,{status:e.target.value})}>${Object.entries(STATUS).map(([k,v])=>html`<option key=${k} value=${k}>${v}</option>`)}</select></td>
@@ -601,7 +606,7 @@ function BookingsTab({bookings,openSlots,reload,toast,meet}){
             <${ConfirmButton} label="מחיקה" confirmLabel="למחוק לצמיתות?" className="btn ghost sm" onConfirm=${()=>del(b)}/>
           </div></td></tr>
         ${notesId===b.id&&html`<${NotesRow} b=${b} save=${t=>patch(b.id,{notes:t},'ההערה נשמרה')}/>`}
-        ${moveId===b.id&&html`<tr className="notes-row"><td colSpan="7"><div className="inline-form"><div className="field"><label htmlFor=${'mv'+b.id}>מועד חדש (שעון ישראל)</label>
+        ${moveId===b.id&&html`<tr className="notes-row"><td colSpan="8"><div className="inline-form"><div className="field"><label htmlFor=${'mv'+b.id}>מועד חדש (שעון ישראל)</label>
           <select id=${'mv'+b.id} defaultValue="" onChange=${e=>e.target.value&&move(b,e.target.value)}><option value="">בחירת שעה פנויה…</option>
           ${byDay.map(([k,list])=>html`<optgroup key=${k} label=${fmtKey(k)}>${list.map(i=>html`<option key=${i} value=${i}>${fmtTime(i)}</option>`)}</optgroup>`)}</select></div>
           <button className="btn ghost sm" onClick=${()=>setMoveId(null)}>סגירה</button></div></td></tr>`}
